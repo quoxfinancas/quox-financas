@@ -1,0 +1,68 @@
+name: QUOX - Atualizar taxas e publicar
+
+on:
+  schedule:
+    # Horários de Brasília (UTC-3), de segunda a sexta. O GitHub pode atrasar alguns minutos.
+    - cron: "30 10 * * 1-5" # 07:30
+    - cron: "0 15 * * 1-5" # 12:00
+    - cron: "10 19 * * 1-5" # 16:10
+  workflow_dispatch: # botão "Run workflow" para rodar na hora
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Testar o leitor de dados
+        run: node scripts/test.mjs
+
+      - name: Buscar taxas do Banco Central e do Tesouro
+        run: node scripts/update.mjs
+        env:
+          BRAPI_TOKEN: ${{ secrets.BRAPI_TOKEN }} # opcional: cotação do Ibovespa
+          OFERTAS_CSV_URL: ${{ secrets.OFERTAS_CSV_URL }} # opcional: planilha de ofertas publicada como CSV
+        continue-on-error: true # se as fontes falharem, o site é publicado com os últimos valores
+
+      - name: Salvar data.json no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git diff --cached --quiet || (git commit -m "Atualiza taxas" && git push)
+
+      - name: Montar o site
+        run: |
+          mkdir _site
+          cp index.html data.json manifest.webmanifest sw.js logo.png favicon-48.png icon-192.png icon-512.png icon-maskable-512.png apple-touch-icon.png _site/
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
