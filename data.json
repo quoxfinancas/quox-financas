@@ -1,5 +1,16 @@
 {
-  "updatedAt": null,
-  "sources": {},
-  "rates": {}
+  "updatedAt": "2026-11-05T23:50:18.733Z",
+  "sources": {
+    "bcb": "2026-12-09",
+    "tesouro": "2026-10-30"
+  },
+  "rates": {
+    "selic": 13.75,
+    "cdi": 13.65,
+    "ipca": 4.58,
+    "spSel": 0.1,
+    "ipcaReal": 7.89,
+    "pre": 15.38
+  },
+  "ofertas": []
 }
