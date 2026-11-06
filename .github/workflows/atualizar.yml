@@ -50,15 +50,16 @@ jobs:
           cp "$RUNNER_TEMP/data.json" data.json
           git add data.json
           git diff --cached --quiet || (git commit -m "Atualiza taxas" && git push origin HEAD:main)
-      - name: Montar o site
-        run: |
-          mkdir _site
+
       - name: Montar o site
         run: |
           mkdir _site
           shopt -s nullglob
           cp *.html *.js *.css *.png *.json *.webmanifest *.xml *.txt _site/
-          touch _site/.nojekyll      - uses: actions/upload-pages-artifact@v3
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
