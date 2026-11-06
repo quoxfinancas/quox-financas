@@ -202,7 +202,7 @@ button.btn{font:inherit;font-weight:700;padding:11px 16px;border-radius:8px;bord
 (function(){
 var $=function(i){return document.getElementById(i)};
 /* Para receber os cadastros, coloque aqui o endereço (URL) que aceita POST, como um Google Apps Script ou um formulário Formspree. Vazio = cadastro fica só neste aparelho. */
-var CFG={cadastroUrl:"",supabaseUrl:"https://mjospmioycadvccqlyty.supabase.co/rest/v1/",supabaseKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qb3NwbWlveWNhZHZjY3FseXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5MTA2MjcsImV4cCI6MjEwOTQ4NjYyN30.jTXPv7-jkR3nV2EiaUr_UDehLiR0hDDXEGiXrUvaHcQ",apple:false};
+var CFG={cadastroUrl:"",supabaseUrl:"https://mjospmioycadvccqlyty.supabase.co",supabaseKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qb3NwbWlveWNhZHZjY3FseXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5MTA2MjcsImV4cCI6MjEwOTQ4NjYyN30.jTXPv7-jkR3nV2EiaUr_UDehLiR0hDDXEGiXrUvaHcQ",apple:false};
 /* Login: preencha supabaseUrl e supabaseKey (chave pública "anon") com os dados do seu projeto Supabase. Com isso vazio, o app usa o cadastro local de antes. */
 var authOn=false,sb=null,authUser=null,recup=false;
 var CK="quox-cadastro-v1";
