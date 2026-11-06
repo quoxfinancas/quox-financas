@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="assessor.css">
 </head>
 <body data-page="assessor">
-<main class="wrap narrow ap">
+<main class="wrap narrow ap" id="ap">
   <div class="ap-top">
     <div>
       <h1>Assessor financeiro</h1>
@@ -27,7 +27,7 @@
     </div>
     <a class="ap-site" href="./">Site</a>
   </div>
-  <div class="aviso" id="priv"><strong>Seus dados ficam só neste aparelho</strong>, no navegador. Se limpar os dados do navegador ou trocar de celular, eles se perdem: faça um backup na aba <em>Relatório</em>. Ferramenta educativa, não é consultoria financeira.</div>
+  <details class="aviso" id="priv"><summary><strong>Seus dados ficam só neste aparelho</strong> (toque para ler mais)</summary><p style="margin:8px 0 0">Eles ficam no navegador. Se você limpar os dados do navegador ou trocar de celular, eles se perdem: faça um backup na aba <em>Relatório</em>. Ferramenta educativa, não é consultoria financeira.</p></details>
   <div class="ap-inst">
     <button class="btn" id="instalar" type="button" hidden>Instalar como aplicativo</button>
     <p class="aviso" id="ios-dica" hidden>Para instalar no iPhone ou iPad: toque no botão de <strong>Compartilhar</strong> do Safari e escolha <strong>Adicionar à Tela de Início</strong>.</p>
@@ -41,7 +41,25 @@
   </div>
 
   <!-- RESUMO -->
-  <section class="tab" id="t-resumo">
+  <!-- CHAT -->
+  <section class="tab" id="t-chat">
+    <div class="chat-lista" id="chat-lista" aria-live="polite"></div>
+    <div class="chat-sug" id="chat-sug"></div>
+    <form class="chat-form" id="chat-form" autocomplete="off">
+      <textarea id="chat-in" rows="1" maxlength="500" placeholder="Ex.: gastei 30 no mercado no cartão Nubank" aria-label="Mensagem"></textarea>
+      <button class="btn" type="submit">Enviar</button>
+    </form>
+    <p class="leg centro">A frase é interpretada no seu aparelho, nada é enviado para a internet. <button class="link-b" type="button" id="chat-manual">Prefiro preencher um formulário</button></p>
+  </section>
+
+  <!-- CATEGORIAS -->
+  <section class="tab" id="t-categorias" hidden>
+    <div class="seg2" id="cat-seg" role="group" aria-label="Tipo"><button type="button" data-tp="despesa" aria-pressed="true">Despesas</button><button type="button" data-tp="receita" aria-pressed="false">Receitas</button></div>
+    <div class="painel" id="cat-lista"></div>
+  </section>
+
+  <!-- RESUMO -->
+  <section class="tab" id="t-resumo" hidden>
     <div class="kpis">
       <div class="kpi"><span>Receitas</span><b id="k-rec" class="pos"></b></div>
       <div class="kpi"><span>Despesas</span><b id="k-desp" class="neg"></b></div>
@@ -50,6 +68,7 @@
     </div>
     <div class="painel"><h2>Dicas do assessor</h2><div id="dicas"></div></div>
     <div class="painel"><h2>Para onde foi o dinheiro</h2><div id="barras"></div></div>
+    <div class="painel"><h2>Por cartão e forma de pagamento</h2><div id="pags"></div></div>
     <div class="painel"><h2>Últimos 6 meses</h2><div id="hist"></div></div>
   </section>
 
@@ -57,6 +76,7 @@
   <section class="tab" id="t-lancar" hidden>
     <form class="painel" id="f-lanc" novalidate>
       <h2 id="f-titulo">Novo lançamento</h2>
+      <p class="sub">Você também pode lançar escrevendo no <a href="#chat" id="ir-chat">Chat</a>.</p>
       <div class="seg" role="radiogroup" aria-label="Tipo">
         <label><input type="radio" name="tipo" value="despesa" checked><span>Despesa</span></label>
         <label><input type="radio" name="tipo" value="receita"><span>Receita</span></label>
@@ -64,6 +84,11 @@
       <label>Valor (R$)<input id="l-valor" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
       <label>Categoria<select id="l-cat"></select></label>
       <label>Data<input id="l-data" type="date"></label>
+      <div class="grid2">
+        <label>Forma de pagamento<select id="l-forma"></select></label>
+        <label>Banco ou cartão<input id="l-banco" maxlength="30" list="bancos-dl" autocomplete="off" placeholder="Ex.: Nubank"></label>
+      </div>
+      <datalist id="bancos-dl"></datalist>
       <label>Descrição (opcional)<input id="l-desc" maxlength="80" autocomplete="off" placeholder="Ex.: mercado, aluguel, salário"></label>
       <p class="erro-t" id="l-erro" role="alert"></p>
       <div class="linha"><button class="btn" type="submit" id="l-salvar">Salvar</button><button class="btn sec" type="button" id="l-cancel" hidden>Cancelar edição</button></div>
@@ -76,6 +101,7 @@
     <div class="painel">
       <div class="linha filtros">
         <label>Mostrar<select id="x-tipo"><option value="">Tudo</option><option value="despesa">Despesas</option><option value="receita">Receitas</option></select></label>
+        <label>Pagamento<select id="x-pag"><option value="">Todos</option></select></label>
         <label>Buscar<input id="x-busca" type="search" placeholder="Descrição ou categoria"></label>
       </div>
     </div>
@@ -131,8 +157,9 @@
 </main>
 
 <nav class="ap-tabs" aria-label="Seções do assessor">
+  <button type="button" data-tab="chat"><i>✉</i>Chat</button>
   <button type="button" data-tab="resumo"><i>▤</i>Resumo</button>
-  <button type="button" data-tab="lancar"><i>＋</i>Lançar</button>
+  <button type="button" data-tab="categorias"><i>◉</i>Categorias</button>
   <button type="button" data-tab="extrato"><i>☰</i>Extrato</button>
   <button type="button" data-tab="dividas"><i>％</i>Dívidas</button>
   <button type="button" data-tab="relatorio"><i>⎙</i>Relatório</button>
@@ -140,6 +167,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="config.js"></script>
+<script src="assessor-parser.js"></script>
 <script src="assessor.js"></script>
 <script src="site.js"></script>
 </body>
