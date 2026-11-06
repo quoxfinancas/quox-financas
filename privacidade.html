@@ -5,32 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Política de Privacidade - QUOX - Finanças</title>
 <meta name="description" content="Como o QUOX - Finanças coleta, usa e protege seus dados pessoais, conforme a LGPD.">
+<meta name="theme-color" content="#081a21">
 <link rel="icon" type="image/png" href="favicon-48.png">
-<style>
-:root{--bg:#f5f4f9;--surface:#fff;--ink:#1c1a2e;--muted:#5f5c78;--line:#dcd9ea;--accent:#4338a8;--warn-bg:#fdefc9;--warn:#8a5a00;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#12111d;--surface:#1c1b2c;--ink:#ecebf6;--muted:#a3a0bd;--line:#302e48;--accent:#a79bff;--warn-bg:#3d3112;--warn:#f2c15c;color-scheme:dark}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:760px;margin:0 auto;padding:16px 16px 56px}
-.brand{background:#081a21;border-radius:14px;padding:4px;margin:8px 0 16px}
-.brand img{display:block;margin:0 auto;height:110px;width:auto;max-width:100%}
-article{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
-h1{font-size:1.5rem;margin:0 0 4px}
-h2{font-size:1.1rem;margin:26px 0 6px}
-p,li{font-size:.97rem}
-ul{padding-left:20px}
-.meta{color:var(--muted);font-size:.88rem;margin:0 0 12px}
-a{color:var(--accent)}
-.aviso{background:var(--warn-bg);color:var(--ink);border:1px solid var(--warn);border-radius:10px;padding:10px 12px;font-size:.9rem;margin:0 0 14px}
-.voltar{display:inline-block;margin:0 0 12px;font-size:.92rem}
-[hidden]{display:none!important}
-</style>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="site.css">
 </head>
-<body>
-<main>
-  <div class="brand"><img src="logo.png" width="420" height="350" alt="QUOX"></div>
-  <a class="voltar" href="./">← Voltar para o QUOX - Finanças</a>
-  <article>
+<body data-page="privacidade">
+<main class="wrap narrow">
+  <article class="legal">
     <div class="aviso" id="pendente" hidden><strong>Atenção:</strong> os dados do responsável ainda não foram preenchidos no arquivo <code>empresa.js</code>.</div>
     <h1>Política de Privacidade</h1>
     <p class="meta">Atualizada em <span data-emp="atualizado"></span> · Aplicativo QUOX - Finanças</p>
@@ -45,9 +28,11 @@ a{color:var(--accent)}
       <li><strong>Dados do cadastro:</strong> nome completo, e-mail, telefone com DDD e a data em que você deu o consentimento.</li>
       <li><strong>Senha:</strong> guardada de forma protegida (criptografada) pelo serviço de autenticação. Nós não temos acesso à sua senha.</li>
       <li><strong>Entrada com o Google:</strong> se você escolher entrar com sua conta Google, recebemos apenas seu nome e seu e-mail. Não acessamos seus e-mails, contatos, arquivos ou outros dados da conta Google.</li>
-      <li><strong>Dados no seu aparelho:</strong> o navegador guarda localmente o seu login (para você continuar conectado) e preferências do app.</li>
+      <li><strong>Dados no seu aparelho:</strong> o navegador guarda localmente o seu login (para você continuar conectado) e preferências.</li>
+      <li><strong>Assessor financeiro:</strong> os lançamentos de receitas e despesas, as categorias e as dívidas que você cadastra ficam <strong>apenas no seu aparelho</strong> (armazenamento do navegador). Não os enviamos aos nossos servidores e não temos acesso a eles. Por isso, se você limpar os dados do navegador ou trocar de aparelho, eles se perdem, a menos que você tenha feito um backup.</li>
     </ul>
-    <p>Os valores, prazos e perfil de investidor que você digita nas simulações são processados no seu próprio aparelho e <strong>não são enviados</strong> aos nossos servidores.</p>
+    <p>Os valores, prazos e perfil de investidor que você digita nas simulações também são processados no seu próprio aparelho e <strong>não são enviados</strong> aos nossos servidores.</p>
+    <p><strong>Análise com IA (recurso opcional):</strong> quando este recurso estiver disponível e você clicar em &quot;Gerar análise&quot;, enviamos apenas os <em>totais</em> do mês por categoria e dados numéricos das dívidas (sem descrições, sem nomes de credores e sem dados que identifiquem você) a um serviço de inteligência artificial, para gerar o comentário. Você pode não usar este recurso, e o restante do assessor funciona normalmente.</p>
 
     <h2>3. Para que usamos seus dados</h2>
     <ul>
@@ -63,7 +48,7 @@ a{color:var(--accent)}
     <ul>
       <li><strong>Supabase:</strong> banco de dados e autenticação (cadastro, login e confirmação de e-mail).</li>
       <li><strong>Google:</strong> quando você escolhe entrar com a conta Google.</li>
-      <li><strong>GitHub (GitHub Pages):</strong> hospedagem das páginas do site.</li>
+      <li><strong>GitHub (GitHub Pages):</strong> hospedagem das páginas do site. Como em qualquer hospedagem, o provedor pode registrar dados técnicos de acesso, como o endereço IP.</li>
       <li><strong>Provedor de envio de e-mails:</strong> para enviar as mensagens de confirmação e de recuperação de senha.</li>
     </ul>
     <p>Alguns desses provedores podem armazenar dados em servidores fora do Brasil. Nesses casos, a transferência segue o art. 33 da LGPD. Também podemos compartilhar dados se uma autoridade competente exigir, conforme a lei.</p>
@@ -87,19 +72,20 @@ a{color:var(--accent)}
     <p>Usamos conexão segura (HTTPS), senhas criptografadas e regras de acesso que permitem que cada pessoa veja somente o próprio cadastro. Nenhum sistema é totalmente imune a falhas. Se ocorrer um incidente que possa causar risco relevante a você, avisaremos você e a ANPD, conforme a lei.</p>
 
     <h2>8. Cookies e armazenamento local</h2>
-    <p>Não usamos cookies de publicidade nem de rastreamento. Usamos o armazenamento local do navegador apenas para manter você conectado e lembrar de suas preferências. Você pode limpar esses dados nas configurações do navegador ou saindo da conta.</p>
+    <p>Não usamos cookies de publicidade nem de rastreamento, nem ferramentas de análise de audiência. Usamos o armazenamento local do navegador apenas para manter você conectado e lembrar de suas preferências. Você pode limpar esses dados nas configurações do navegador ou saindo da conta.</p>
 
     <h2>9. Menores de idade</h2>
     <p>O aplicativo é destinado a maiores de 18 anos. Não coletamos intencionalmente dados de menores.</p>
 
-    <h2>10. O que o aplicativo é (e não é)</h2>
-    <p>O QUOX - Finanças é uma ferramenta de simulação educativa. Ele não é consultoria, recomendação nem oferta de investimento. Mais detalhes estão nos <a href="termos.html">Termos de Uso</a>.</p>
+    <h2>10. O que o site e os aplicativos são (e não são)</h2>
+    <p>O QUOX - Finanças reúne artigos de educação financeira e ferramentas (simulador de investimentos e assessor financeiro) com fins educativos. Eles não são consultoria, recomendação nem oferta de investimento, seguro ou crédito. Mais detalhes estão nos <a href="termos.html">Termos de Uso</a>.</p>
 
     <h2>11. Mudanças nesta política</h2>
     <p>Podemos atualizar esta política. Quando houver mudanças relevantes, avisaremos no aplicativo ou por e-mail, e a data de atualização no topo da página será alterada.</p>
   </article>
 </main>
 <script src="empresa.js"></script>
+<script src="site.js"></script>
 <script>
 (function(){
   var E=window.EMPRESA||{},pend=false;

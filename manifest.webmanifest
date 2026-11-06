@@ -1,7 +1,7 @@
 {
   "name": "QUOX - Finanças",
   "short_name": "QUOX",
-  "description": "Simulador de investimentos por perfil de investidor.",
+  "description": "Educação financeira: artigos, simulador de investimentos e assessor financeiro.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",

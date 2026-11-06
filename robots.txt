@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://quoxfinancas.github.io/quox-financas/sitemap.xml

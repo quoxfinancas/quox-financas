@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Assessor financeiro | QUOX - Finanças</title>
+<meta name="description" content="Lance seus gastos e receitas, veja o relatório do mês, receba dicas e monte um plano para sair das dívidas. Gratuito e pode ser instalado no celular.">
+<meta name="theme-color" content="#081a21">
+<link rel="manifest" href="manifest-assessor.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="QUOX Assessor">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="assessor.css">
+</head>
+<body data-page="assessor">
+<main class="wrap narrow ap">
+  <div class="ap-top">
+    <div>
+      <h1>Assessor financeiro</h1>
+      <p class="sub">Anote o que entra e o que sai, veja para onde o dinheiro vai e monte um plano para sair das dívidas.</p>
+    </div>
+    <a class="ap-site" href="./">Site</a>
+  </div>
+  <div class="aviso" id="priv"><strong>Seus dados ficam só neste aparelho</strong>, no navegador. Se limpar os dados do navegador ou trocar de celular, eles se perdem: faça um backup na aba <em>Relatório</em>. Ferramenta educativa, não é consultoria financeira.</div>
+  <div class="ap-inst">
+    <button class="btn" id="instalar" type="button" hidden>Instalar como aplicativo</button>
+    <p class="aviso" id="ios-dica" hidden>Para instalar no iPhone ou iPad: toque no botão de <strong>Compartilhar</strong> do Safari e escolha <strong>Adicionar à Tela de Início</strong>.</p>
+  </div>
+  <p class="aviso erro" id="erro-salvar" hidden>Não foi possível guardar os dados neste navegador (modo privado ou armazenamento bloqueado). O que você lançar vale só até fechar a página. Faça backup.</p>
+
+  <div class="mes-nav" id="mes-nav">
+    <button type="button" id="mes-ant" aria-label="Mês anterior">‹</button>
+    <strong id="mes-txt" aria-live="polite"></strong>
+    <button type="button" id="mes-prox" aria-label="Próximo mês">›</button>
+  </div>
+
+  <!-- RESUMO -->
+  <section class="tab" id="t-resumo">
+    <div class="kpis">
+      <div class="kpi"><span>Receitas</span><b id="k-rec" class="pos"></b></div>
+      <div class="kpi"><span>Despesas</span><b id="k-desp" class="neg"></b></div>
+      <div class="kpi"><span>Saldo</span><b id="k-saldo"></b></div>
+      <div class="kpi"><span>Poupado</span><b id="k-taxa"></b></div>
+    </div>
+    <div class="painel"><h2>Dicas do assessor</h2><div id="dicas"></div></div>
+    <div class="painel"><h2>Para onde foi o dinheiro</h2><div id="barras"></div></div>
+    <div class="painel"><h2>Últimos 6 meses</h2><div id="hist"></div></div>
+  </section>
+
+  <!-- LANÇAR -->
+  <section class="tab" id="t-lancar" hidden>
+    <form class="painel" id="f-lanc" novalidate>
+      <h2 id="f-titulo">Novo lançamento</h2>
+      <div class="seg" role="radiogroup" aria-label="Tipo">
+        <label><input type="radio" name="tipo" value="despesa" checked><span>Despesa</span></label>
+        <label><input type="radio" name="tipo" value="receita"><span>Receita</span></label>
+      </div>
+      <label>Valor (R$)<input id="l-valor" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+      <label>Categoria<select id="l-cat"></select></label>
+      <label>Data<input id="l-data" type="date"></label>
+      <label>Descrição (opcional)<input id="l-desc" maxlength="80" autocomplete="off" placeholder="Ex.: mercado, aluguel, salário"></label>
+      <p class="erro-t" id="l-erro" role="alert"></p>
+      <div class="linha"><button class="btn" type="submit" id="l-salvar">Salvar</button><button class="btn sec" type="button" id="l-cancel" hidden>Cancelar edição</button></div>
+    </form>
+    <div class="painel"><h2>Últimos lançamentos</h2><div id="l-ultimos"></div></div>
+  </section>
+
+  <!-- EXTRATO -->
+  <section class="tab" id="t-extrato" hidden>
+    <div class="painel">
+      <div class="linha filtros">
+        <label>Mostrar<select id="x-tipo"><option value="">Tudo</option><option value="despesa">Despesas</option><option value="receita">Receitas</option></select></label>
+        <label>Buscar<input id="x-busca" type="search" placeholder="Descrição ou categoria"></label>
+      </div>
+    </div>
+    <div class="painel"><div id="x-lista"></div></div>
+  </section>
+
+  <!-- DÍVIDAS -->
+  <section class="tab" id="t-dividas" hidden>
+    <form class="painel" id="f-div" novalidate>
+      <h2 id="d-titulo">Minhas dívidas</h2>
+      <p class="sub">Cadastre cada dívida com o saldo atual, os juros por mês e a parcela mínima. Os juros mensais aparecem no contrato ou na fatura.</p>
+      <label>Nome<input id="d-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Cartão do banco X"></label>
+      <div class="grid2">
+        <label>Saldo devedor (R$)<input id="d-saldo" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+        <label>Juros ao mês (%)<input id="d-juros" inputmode="decimal" autocomplete="off" placeholder="Ex.: 12"></label>
+      </div>
+      <label>Parcela mínima por mês (R$)<input id="d-parc" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+      <p class="erro-t" id="d-erro" role="alert"></p>
+      <div class="linha"><button class="btn" type="submit">Salvar dívida</button><button class="btn sec" type="button" id="d-cancel" hidden>Cancelar edição</button></div>
+    </form>
+    <div class="painel"><div id="d-lista"></div></div>
+    <div class="painel" id="d-plano" hidden>
+      <h2>Plano para quitar</h2>
+      <div class="grid2">
+        <label>Dinheiro extra por mês (R$)<input id="p-extra" inputmode="decimal" autocomplete="off" value="0"></label>
+        <label>Método<select id="p-met"><option value="av">Avalanche (menos juros)</option><option value="bn">Bola de neve (menor saldo primeiro)</option></select></label>
+      </div>
+      <div id="p-res"></div>
+    </div>
+  </section>
+
+  <!-- RELATÓRIO -->
+  <section class="tab" id="t-relatorio" hidden>
+    <div class="painel" id="rel"></div>
+    <div class="painel" id="ia-box" hidden>
+      <h2>Análise com IA</h2>
+      <p class="sub">Envia só os totais do mês (sem descrições e sem nomes) para gerar um comentário personalizado. É preciso estar logado no Simulador.</p>
+      <button class="btn" type="button" id="ia-btn">Gerar análise</button>
+      <div id="ia-out" class="ia-out" aria-live="polite"></div>
+    </div>
+    <div class="painel">
+      <h2>Seus dados</h2>
+      <div class="linha wrap-l">
+        <button class="btn" type="button" id="b-print">Imprimir ou salvar em PDF</button>
+        <button class="btn sec" type="button" id="b-csv">Exportar mês (CSV)</button>
+        <button class="btn sec" type="button" id="b-backup">Fazer backup (arquivo)</button>
+        <label class="btn sec arq">Restaurar backup<input type="file" id="b-restaurar" accept="application/json,.json"></label>
+        <button class="btn sec perigo" type="button" id="b-apagar">Apagar todos os dados</button>
+      </div>
+      <p class="sub" id="b-msg" role="status"></p>
+    </div>
+  </section>
+</main>
+
+<nav class="ap-tabs" aria-label="Seções do assessor">
+  <button type="button" data-tab="resumo"><i>▤</i>Resumo</button>
+  <button type="button" data-tab="lancar"><i>＋</i>Lançar</button>
+  <button type="button" data-tab="extrato"><i>☰</i>Extrato</button>
+  <button type="button" data-tab="dividas"><i>％</i>Dívidas</button>
+  <button type="button" data-tab="relatorio"><i>⎙</i>Relatório</button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="config.js"></script>
+<script src="assessor.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

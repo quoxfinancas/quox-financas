@@ -1,10 +1,11 @@
-// Service worker do QUOX - Finanças: deixa o app abrir sem internet.
-// Rede primeiro (para sempre mostrar a versão e as taxas mais novas); cache só como reserva.
-const CACHE = "quox-v2";
-const BASICO = ["./", "manifest.webmanifest", "icon-192.png", "icon-512.png", "logo.png"];
+// Service worker do QUOX - Finanças: deixa o site e o assessor abrirem sem internet.
+// Rede primeiro (para sempre mostrar a versão mais nova); cache só como reserva.
+const CACHE = "quox-v3";
+const BASICO = ["./", "artigos.html", "simulador.html", "assessor.html", "assessor.js", "assessor.css", "nav.css", "site.css", "site.js", "config.js", "manifest.webmanifest", "manifest-assessor.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(BASICO)).then(() => self.skipWaiting()));
+  // cada arquivo é guardado separadamente: se um faltar, os outros continuam
+  e.waitUntil(caches.open(CACHE).then((c) => Promise.all(BASICO.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
@@ -26,6 +27,6 @@ self.addEventListener("fetch", (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((r) => r || caches.match("./")))
+      .catch(() => caches.match(req).then((r) => r || (req.mode === "navigate" ? caches.match("./") : undefined)))
   );
 });

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de investimentos | QUOX - Finanças</title>
+<meta name="description" content="Simule como distribuir seu dinheiro entre opções reais do mercado brasileiro, conforme o seu perfil de investidor. Ferramenta educativa, não é consultoria.">
+<link rel="stylesheet" href="nav.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#081a21">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="QUOX">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+:root{--bg:#f5f4f9;--surface:#fff;--ink:#1c1a2e;--muted:#5f5c78;--line:#dcd9ea;--accent:#4338a8;--accent-ink:#fff;--soft:#ece9fa;--lo:#14704a;--lo-bg:#dff3e8;--mo:#8a5a00;--mo-bg:#fdefc9;--hi:#a8321f;--hi-bg:#fbdcd5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12111d;--surface:#1c1b2c;--ink:#ecebf6;--muted:#a3a0bd;--line:#302e48;--accent:#a79bff;--accent-ink:#17123d;--soft:#272546;--lo:#6fdba4;--lo-bg:#173a2b;--mo:#f2c15c;--mo-bg:#3d3112;--hi:#f59a85;--hi-bg:#442019;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12111d;--surface:#1c1b2c;--ink:#ecebf6;--muted:#a3a0bd;--line:#302e48;--accent:#a79bff;--accent-ink:#17123d;--soft:#272546;--lo:#6fdba4;--lo-bg:#173a2b;--mo:#f2c15c;--mo-bg:#3d3112;--hi:#f59a85;--hi-bg:#442019;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Manrope",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:12px 16px 48px}
+h1{font-size:1.45rem;margin:12px 0 2px;letter-spacing:-.01em}
+.brand{background:#081a21;border-radius:14px;margin:8px 0 12px;padding:4px}
+.brand h1{margin:0;font-size:0;line-height:0}
+.brand img{display:block;margin:0 auto;height:150px;width:auto;max-width:100%}
+.mlogo{display:block;margin:0 auto 8px;height:110px;width:auto;max-width:100%;background:#081a21;border-radius:10px}
+.sub{color:var(--muted);margin:0 0 12px}
+.warn{background:var(--mo-bg);color:var(--ink);border:1px solid var(--mo);border-radius:10px;padding:10px 12px;font-size:.88rem;margin-bottom:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.panel h2{font-size:1.02rem;margin:0 0 10px}
+.panel h3{font-size:.92rem;margin:12px 0 4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:.82rem;color:var(--muted)}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-top:3px}
+input[type=checkbox]{width:18px;height:18px;margin:3px 0 0;padding:0;flex:none}
+label.opt{display:flex;gap:8px;align-items:flex-start;color:var(--ink);font-size:.9rem;margin-top:8px}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;gap:6px;margin:4px 0 8px}
+.seg button{flex:1;padding:9px 4px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;font:inherit;font-weight:600;font-size:.88rem;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.lbl{font-size:.82rem;color:var(--muted)}
+.big{background:var(--soft);border-radius:10px;padding:14px;margin-bottom:14px}
+.big .v{font-size:1.8rem;font-weight:800;letter-spacing:-.02em;color:var(--accent)}
+.big .l{color:var(--muted);font-size:.9rem}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.tri div{background:var(--surface);border-radius:8px;padding:8px}.tri span{display:block}.tri strong{font-size:1.02rem}.tri .mid strong{color:var(--accent)}
+.bar{display:flex;height:12px;border-radius:99px;overflow:hidden;margin:10px 0 6px;background:var(--line)}
+.bar i{display:block;height:100%}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.card h3{font-size:.98rem;margin:0 0 6px}
+.badge{display:inline-block;font-size:.76rem;font-weight:700;padding:2px 8px;border-radius:99px;margin-right:6px;vertical-align:middle}
+.b-baixo{background:var(--lo-bg);color:var(--lo)}.b-moderado{background:var(--mo-bg);color:var(--mo)}.b-alto{background:var(--hi-bg);color:var(--hi)}
+.amt{font-size:1.15rem;font-weight:800}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:.9rem;border-bottom:1px dashed var(--line)}
+.kv span:first-child{color:var(--muted)}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:.9rem;color:var(--accent)}
+details p{margin:6px 0;font-size:.88rem}
+.note{font-size:.8rem;color:var(--muted)}
+a{color:var(--accent)}
+button.link{background:none;border:none;color:var(--accent);font:inherit;font-size:.82rem;text-decoration:underline;cursor:pointer;padding:4px}
+.erro{color:var(--hi);font-size:.85rem;min-height:1.2em;margin:8px 0 0}
+#modal{position:fixed;inset:0;background:rgba(10,8,30,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+#modal .box{background:var(--surface);color:var(--ink);border-radius:12px;max-width:440px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:20px}
+#modal h2{margin:0 0 8px;font-size:1.15rem}
+#modal p{font-size:.9rem;margin:6px 0}
+#modal label{margin-top:8px}
+#auth{position:fixed;inset:0;background:rgba(10,8,30,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+#auth .box{background:var(--surface);color:var(--ink);border-radius:12px;max-width:440px;width:100%;max-height:calc(100vh - 32px);overflow:auto;padding:20px}
+#auth h2{margin:0 0 8px;font-size:1.15rem}
+#auth p{font-size:.9rem;margin:6px 0}
+#auth label{margin-top:8px}
+button.btn.sec{background:var(--surface);color:var(--accent)}
+.ou{text-align:center;font-size:.8rem;color:var(--muted);margin:10px 0 0}
+button.btn{font:inherit;font-weight:700;padding:11px 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;width:100%;margin-top:8px}
+.mini{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body data-page="simulador">
+<div id="auth" role="dialog" aria-modal="true" aria-labelledby="a-t" hidden>
+  <div class="box">
+    <img class="mlogo" src="logo.png" width="420" height="350" alt="">
+    <h2 id="a-t">QUOX - Finanças</h2>
+    <p class="note"><a href="./">← Voltar para o site</a></p>
+
+    <form id="a-entrar" novalidate hidden>
+      <p>Entre para continuar. Se você já entrou neste aparelho, não precisa entrar de novo.</p>
+      <label>E-mail<input id="e-email" type="email" inputmode="email" autocomplete="email"></label>
+      <label>Senha<input id="e-senha" type="password" autocomplete="current-password"></label>
+      <button class="btn" type="submit">Entrar</button>
+      <button class="btn sec" type="button" data-google>Entrar com o Google</button>
+      <button class="btn sec" type="button" data-apple hidden>Entrar com a Apple</button>
+      <div class="mini" style="margin-top:8px"><button class="link" type="button" data-ir="recuperar">Esqueci a senha</button><button class="link" type="button" data-ir="criar">Criar conta</button></div>
+    </form>
+
+    <form id="a-criar" novalidate hidden>
+      <p>Crie sua conta. Vamos enviar um e-mail para você confirmar o cadastro.</p>
+      <label>Nome completo<input id="n-nome" autocomplete="name"></label>
+      <label>E-mail<input id="n-email" type="email" inputmode="email" autocomplete="email"></label>
+      <label>Telefone com DDD<input id="a-tel" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(11) 91234-5678"></label>
+      <label>Senha (mínimo de 8 caracteres)<input id="n-senha" type="password" autocomplete="new-password"></label>
+      <label class="opt"><input type="checkbox" id="n-lgpd"><span>Concordo em fornecer nome, e-mail e telefone para uso da plataforma e para contato sobre ela, conforme a LGPD, os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
+      <button class="btn" type="submit">Criar conta</button>
+      <button class="btn sec" type="button" data-google>Criar conta com o Google</button>
+      <button class="btn sec" type="button" data-apple hidden>Criar conta com a Apple</button>
+      <div class="mini" style="margin-top:8px"><button class="link" type="button" data-ir="entrar">Já tenho conta</button></div>
+    </form>
+
+    <div id="a-confirmar" hidden>
+      <p>Enviamos um link de confirmação para <strong id="conf-email"></strong>. Abra o e-mail (veja também o spam) e toque no link para ativar a conta.</p>
+      <button class="btn" type="button" id="reenviar">Reenviar e-mail</button>
+      <div class="mini" style="margin-top:8px"><button class="link" type="button" data-ir="entrar">Voltar para entrar</button></div>
+    </div>
+
+    <form id="a-recuperar" novalidate hidden>
+      <p>Informe seu e-mail e enviaremos um link para criar uma nova senha.</p>
+      <label>E-mail<input id="r-email" type="email" inputmode="email" autocomplete="email"></label>
+      <button class="btn" type="submit">Enviar link</button>
+      <div class="mini" style="margin-top:8px"><button class="link" type="button" data-ir="entrar">Voltar para entrar</button></div>
+    </form>
+
+    <form id="a-novasenha" novalidate hidden>
+      <p>Crie sua nova senha.</p>
+      <label>Nova senha (mínimo de 8 caracteres)<input id="s-senha" type="password" autocomplete="new-password"></label>
+      <button class="btn" type="submit">Salvar senha</button>
+    </form>
+
+    <form id="a-completar" novalidate hidden>
+      <p>Falta pouco. Informe seu telefone para concluir o cadastro.</p>
+      <label>Telefone com DDD<input id="p-tel" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(11) 91234-5678"></label>
+      <label class="opt"><input type="checkbox" id="p-lgpd"><span>Concordo em fornecer nome, e-mail e telefone para uso da plataforma e para contato sobre ela, conforme a LGPD, os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
+      <button class="btn" type="submit">Concluir cadastro</button>
+      <div class="mini" style="margin-top:8px"><button class="link" type="button" id="p-sair">Sair</button></div>
+    </form>
+
+    <p id="a-erro" class="erro" role="alert"></p>
+    <p id="a-ok" class="note" role="status"></p>
+  </div>
+</div>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="m-t">
+  <div class="box">
+    <img class="mlogo" src="logo.png" width="420" height="350" alt="">
+    <h2 id="m-t">Bem-vindo à QUOX - Finanças</h2>
+    <p>Este aplicativo é <strong>apenas uma simulação educativa</strong>. Ele <strong>não é consultoria, recomendação ou oferta de investimento</strong> e não conhece sua situação financeira, seus objetivos ou sua tolerância a perdas.</p>
+    <p>Rentabilidade passada ou projetada não garante resultado futuro, e investimentos podem perder valor. Antes de aplicar, consulte um profissional habilitado (assessor ou analista registrado na CVM, por exemplo).</p>
+    <form id="cad" novalidate>
+      <div id="cad-campos">
+        <label>Nome completo<input id="c-nome" autocomplete="name" required></label>
+        <label>E-mail<input id="c-email" type="email" inputmode="email" autocomplete="email" required></label>
+        <label>Telefone com DDD<input id="c-tel" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(11) 91234-5678" required></label>
+        <label class="opt"><input type="checkbox" id="c-lgpd"><span>Concordo em fornecer nome, e-mail e telefone para uso da plataforma e para contato sobre ela, conforme a LGPD, os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
+      </div>
+      <label class="opt"><input type="checkbox" id="c-sim"><span>Entendi que é apenas uma simulação, não consultoria.</span></label>
+      <p id="c-erro" class="erro" role="alert"></p>
+      <button class="btn" type="submit" id="c-ok">Cadastrar e entrar</button>
+    </form>
+  </div>
+</div>
+
+<main>
+  <div class="mini"><span class="note" id="ola"></span><button class="link" id="sair" hidden>Sair</button></div>
+  <h1>Simulador de investimentos</h1>
+  <p class="sub">Simule como distribuir seu dinheiro entre opções reais do mercado brasileiro, conforme o seu perfil de investidor.</p>
+  <div class="warn"><strong>Simulação, não consultoria.</strong> <span id="atual">As taxas são um retrato de 05/11/2026 e não se atualizam sozinhas.</span> <span id="mercado"></span> Confirme tudo na plataforma antes de decidir.</div>
+
+  <section class="panel">
+    <h2>Sua simulação</h2>
+    <div class="grid">
+      <label>Valor disponível (R$)<input id="valor" type="number" inputmode="decimal" min="0" step="any" value="10000"></label>
+      <label>Prazo (meses)<input id="prazo" type="number" inputmode="numeric" min="1" step="1" value="24"></label>
+    </div>
+
+    <div class="lbl" style="margin-top:12px">Seu perfil de investidor</div>
+    <div class="seg" id="perfil"><button data-p="cons" aria-pressed="false">Conservador</button><button data-p="mod" aria-pressed="true">Moderado</button><button data-p="arr" aria-pressed="false">Arrojado</button><button data-p="agr" aria-pressed="false">Agressivo</button></div>
+    <p class="note" id="perfil-desc"></p>
+
+    <div class="lbl" style="margin-top:10px">Em quantas opções diversificar? (máximo 5)</div>
+    <div class="seg" id="qtd"><button data-n="1" aria-pressed="false">1</button><button data-n="2" aria-pressed="false">2</button><button data-n="3" aria-pressed="true">3</button><button data-n="4" aria-pressed="false">4</button><button data-n="5" aria-pressed="false">5</button></div>
+
+    <div class="mini" style="margin-top:6px"><span class="lbl" id="cont"></span><button class="link" id="sugerir" type="button">Sugerir para o meu perfil</button></div>
+    <div id="opcoes"></div>
+  </section>
+
+  <section id="res"></section>
+
+  <section class="panel" id="ofertas" hidden></section>
+
+  <details class="panel" id="taxas">
+    <summary>Taxas de referência usadas (editáveis)</summary>
+    <p class="note">Os valores iniciais são um retrato de 05/11/2026. Com a atualização automática ativa, Selic, CDI, IPCA e Tesouro vêm de fontes oficiais; percentuais de CDB, LCI/LCA, poupança e a taxa de administração da previdência são faixas típicas e variam por instituição. Altere para testar cenários.</p>
+    <div class="grid" id="rates"></div>
+  </details>
+
+  <p class="note">A divisão do dinheiro segue regras genéricas por perfil, iguais para qualquer pessoa. Nomes de instituições são exemplos de mercado, sem indicação nem parceria; confira o registro da instituição no <a href="https://www.bcb.gov.br" target="_blank" rel="noopener">Banco Central</a> ou na CVM. Informações oficiais sobre títulos públicos: <a href="https://www.tesourodireto.com.br" target="_blank" rel="noopener">Tesouro Direto</a>. Sobre a garantia do FGC: <a href="https://www.fgc.org.br" target="_blank" rel="noopener">fgc.org.br</a>.</p>
+</main>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+/* Para receber os cadastros, coloque aqui o endereço (URL) que aceita POST, como um Google Apps Script ou um formulário Formspree. Vazio = cadastro fica só neste aparelho. */
+var CFG=window.QUOX_CFG||{cadastroUrl:"",supabaseUrl:"",supabaseKey:"",apple:false};
+/* Login: preencha supabaseUrl e supabaseKey (chave pública "anon") com os dados do seu projeto Supabase. Com isso vazio, o app usa o cadastro local de antes. */
+var authOn=false,sb=null,authUser=null,recup=false;
+var CK="quox-cadastro-v1";
+var R={selic:13.75,cdi:13.65,ipca:4.62,spSel:0.10,ipcaReal:7.93,pre:15.40,cdb1:100,cdb2:110,lci:92,poup:6.17,prevAdm:1.0};
+var RL={selic:"Selic meta (% a.a.)",cdi:"CDI (% a.a.)",ipca:"IPCA 12 meses (%)",spSel:"Tesouro Selic: spread (% a.a.)",ipcaReal:"Tesouro IPCA+ 2032: taxa real (%)",pre:"Tesouro Prefixado 2032 (% a.a.)",cdb1:"CDB liquidez diária (% do CDI)",cdb2:"CDB com prazo (% do CDI)",lci:"LCI/LCA (% do CDI)",poup:"Poupança (% a.a.)",prevAdm:"Previdência: taxa de administração (% a.a.)"};
+var TES="Tesouro Direto (plataforma oficial), acessado por bancos e corretoras como BTG Pactual, Rico, XP, Nubank, Inter e Itaú";
+var BNK="Bancos e corretoras, como Inter, Nubank, BTG Pactual, XP e C6 Bank";
+var B3="Bolsa (B3), via corretoras como XP, Rico, BTG Pactual, Clear e Inter";
+var PRV="Bancos, seguradoras e corretoras, como Brasilprev, Itaú, Bradesco, XP e BTG Pactual";
+var IRR="IR regressivo sobre o ganho (22,5% até 180 dias, 15% após 720 dias)";
+var IRP="Tabela regressiva sobre o ganho: 35% (até 2 anos), 30%, 25%, 20%, 15% e 10% (acima de 10 anos); sem come-cotas. No VGBL o imposto incide só sobre o rendimento; no PGBL, sobre o valor total resgatado, mas é possível deduzir até 12% da renda bruta anual no IR (declaração completa). A simulação calcula o imposto sobre o ganho. Pode haver taxa de carregamento, não incluída";
+var O=[
+{id:"tselic",n:"Tesouro Selic 2031",r:"baixo",k:"sel",ir:1,liq:"Diária (resgate em D+1)",gar:"Tesouro Nacional",min:"cerca de R$ 200",t:IRR+"; taxa de custódia da B3",pl:TES,d:"Título público que acompanha a Selic. É a opção mais usada para reserva de emergência.",rk:"Risco de crédito praticamente nulo e oscilação pequena. O rendimento cai se a Selic cair."},
+{id:"cdbdl",n:"CDB com liquidez diária (cerca de 100% do CDI)",r:"baixo",k:"cdi1",ir:1,liq:"Diária",gar:"FGC, até R$ 250 mil por CPF e instituição",min:"a partir de R$ 1 em muitas instituições",t:IRR,pl:BNK,d:"Empréstimo ao banco, com resgate a qualquer momento.",rk:"Depende da saúde do banco emissor; o FGC cobre o valor dentro do limite."},
+{id:"cdb",n:"CDB pós-fixado com prazo (cerca de 110% do CDI)",r:"baixo",k:"cdi2",ir:1,liq:"No vencimento (prazo escolhido na compra)",gar:"FGC, até R$ 250 mil por CPF e instituição",min:"varia (de R$ 100 a R$ 1.000)",t:IRR,pl:BNK,d:"Paga mais que o CDB de liquidez diária em troca de deixar o dinheiro parado até o vencimento.",rk:"Taxas mais altas costumam vir de bancos menores; compare a solidez da instituição."},
+{id:"lci",n:"LCI ou LCA (cerca de 92% do CDI, isenta de IR)",r:"baixo",k:"lci",ir:0,liq:"No vencimento, geralmente com carência de 90 dias ou mais",gar:"FGC, até R$ 250 mil por CPF e instituição",min:"varia (de R$ 1.000 a R$ 5.000)",t:"Isenta de IR para pessoa física",pl:"Bancos e corretoras, como Banco do Brasil, Caixa, Itaú, Inter e XP",d:"Letras de crédito ligadas ao setor imobiliário (LCI) ou agrícola (LCA).",rk:"Menos liquidez: resgate antes do vencimento pode não ser possível."},
+{id:"poup",n:"Poupança",r:"baixo",k:"poup",ir:0,liq:"Diária (aniversário mensal)",gar:"FGC, até R$ 250 mil por CPF e instituição",min:"sem mínimo",t:"Isenta de IR para pessoa física",pl:"Qualquer banco, como Caixa, Banco do Brasil, Itaú, Bradesco e Nubank",d:"Referência de comparação: costuma render menos que as demais opções de baixo risco quando a Selic está alta.",rk:"Seguro, mas perde para a inflação em vários períodos."},
+{id:"prevrf",n:"Previdência privada (PGBL ou VGBL) em renda fixa",r:"baixo",k:"prevrf",ir:2,liq:"Resgate em cerca de D+1 a D+60, conforme o plano; pode haver carência",gar:"Sem garantia do FGC; planos e seguradoras são fiscalizados pela Susep",min:"varia; muitos planos aceitam aportes mensais a partir de R$ 100",t:IRP,pl:PRV,d:"Plano de longo prazo que investe em fundos de renda fixa. Serve para aposentadoria ou para planejar sucessão, e o benefício fiscal do PGBL só compensa para quem faz a declaração completa do IR.",rk:"O rendimento é o do fundo menos a taxa de administração; taxas altas corroem o resultado. O imposto só cai para 10% depois de 10 anos."},
+{id:"tipca",n:"Tesouro IPCA+ 2032",r:"moderado",k:"ipca",ir:1,liq:"Diária, mas o preço oscila antes do vencimento (15/08/2032)",gar:"Tesouro Nacional",min:"cerca de R$ 30",t:IRR+"; taxa de custódia da B3",pl:TES,d:"Paga a inflação (IPCA) mais uma taxa fixa. Protege o poder de compra no longo prazo.",rk:"Se vender antes do vencimento, o preço pode estar acima ou abaixo do valor aplicado (marcação a mercado)."},
+{id:"tpre",n:"Tesouro Prefixado 2032",r:"moderado",k:"pre",ir:1,liq:"Diária, mas o preço oscila antes do vencimento (01/01/2032)",gar:"Tesouro Nacional",min:"cerca de R$ 5",t:IRR+"; taxa de custódia da B3",pl:TES,d:"Taxa de juros combinada na compra. O resultado só é garantido se mantido até o vencimento.",rk:"Se os juros subirem e você vender antes, pode perder dinheiro; se a inflação passar da taxa contratada, o ganho real diminui."},
+{id:"fii",n:"Fundos imobiliários (FIIs)",r:"moderado",k:"var",sc:[-6,8.5,21],tx:0,bs:"IFIX (retorno total, com rendimentos): cerca de 8% a 9% ao ano em 10 anos, com variação de −5,9% em 2024 a +21,2% em 2025. Estimativa sem IR sobre rendimentos.",ir:0,liq:"Diária, na bolsa",gar:"Sem garantia",min:"o preço de uma cota (geralmente abaixo de R$ 200)",t:"Rendimentos mensais isentos de IR para pessoa física em geral; ganho na venda é tributado",pl:B3,d:"Cotas de fundos que investem em imóveis ou títulos imobiliários e distribuem rendimentos mensais.",rk:"Cotas oscilam todo dia, e os rendimentos mensais não são garantidos."},
+{id:"multi",n:"Fundos multimercado",r:"moderado",k:"var",sc:[2,12,17],tx:.15,bs:"Faixa ilustrativa: esses fundos buscam superar o CDI, mas muitos rendem menos que ele depois das taxas. Cada fundo tem histórico próprio.",ir:1,liq:"Varia (de D+1 a D+30 ou mais)",gar:"Sem garantia",min:"varia, de R$ 100 a R$ 5.000",t:"Come-cotas semestral e IR no resgate",pl:"Corretoras e bancos, como XP, BTG Pactual, Itaú e Rico",d:"Gestor combina juros, ações, moedas e outros ativos. Cada fundo tem estratégia própria.",rk:"Pode ter meses negativos; cobra taxa de administração e, em alguns, de performance."},
+{id:"prevmm",n:"Previdência privada (PGBL ou VGBL) multimercado",r:"moderado",k:"var",sc:[-2,10.5,16],tx:"prev",bs:"Faixa ilustrativa, já considerando taxas típicas: planos multimercado oscilam mais que a renda fixa e podem render menos que o CDI. Cada plano tem histórico próprio.",ir:2,liq:"Resgate em cerca de D+1 a D+60, conforme o plano; pode haver carência",gar:"Sem garantia do FGC; planos e seguradoras são fiscalizados pela Susep",min:"varia; muitos planos aceitam aportes mensais a partir de R$ 100",t:IRP,pl:PRV,d:"Plano de longo prazo que investe em fundos multimercado, com troca de fundo e de perfil sem imposto no meio do caminho.",rk:"Pode ter meses negativos; taxas de administração e de performance reduzem o ganho."},
+{id:"acoes",n:"Ações brasileiras ou ETF que replica o Ibovespa",r:"alto",k:"var",sc:[-9,10,25],tx:.15,bs:"Ibovespa: média de cerca de 13% ao ano entre 1995 e 2024 e de 8% a 9% ao ano em 10 anos, segundo levantamentos de mercado. A pior janela de 5 anos chegou a cerca de −9% ao ano; 2025 teve alta de 34%.",ir:0,liq:"Diária, na bolsa",gar:"Sem garantia",min:"o preço de uma ação ou cota",t:"15% sobre o lucro nas vendas; isenção de vendas até R$ 20 mil por mês em ações",pl:B3,d:"Participação em empresas listadas. O retorno vem da valorização e dos dividendos.",rk:"Em crises, o mercado já caiu mais de 30% e levou anos para se recuperar. Não use dinheiro que você precisa a curto prazo."},
+{id:"intl",n:"ETF de ações internacionais (ex.: índice dos EUA)",r:"alto",k:"var",sc:[-10,11,25],tx:.15,bs:"Faixa ilustrativa: o índice S&P 500 rendeu cerca de 10% ao ano em dólares no longo prazo, e a variação do câmbio pode somar ou subtrair muito em reais.",ir:0,liq:"Diária, na bolsa",gar:"Sem garantia",min:"o preço de uma cota",t:"15% sobre o lucro nas vendas",pl:"B3, via corretoras, ou contas globais como Avenue e Nomad",d:"Diversifica fora do Brasil. O valor em reais também varia com o câmbio.",rk:"Sofre com quedas dos mercados e com a variação do dólar."},
+{id:"prevrv",n:"Previdência privada (PGBL ou VGBL) em renda variável",r:"alto",k:"var",sc:[-15,10,28],tx:"prev",bs:"Faixa ilustrativa, já considerando taxas típicas: planos de ações acompanham a bolsa e podem ter longos períodos de queda.",ir:2,liq:"Resgate em cerca de D+1 a D+60 (em alguns planos de ações, mais); pode haver carência",gar:"Sem garantia do FGC; planos e seguradoras são fiscalizados pela Susep",min:"varia; muitos planos aceitam aportes mensais a partir de R$ 100",t:IRP,pl:PRV,d:"Plano de longo prazo que investe em fundos de ações. Indicado só para prazos bem longos.",rk:"Em crises, o valor já caiu mais de 30%. Taxas de administração elevadas pesam no resultado."},
+{id:"cripto",n:"Criptoativos",r:"alto",k:"var",sc:[-50,10,60],tx:.15,bs:"O Bitcoin caiu cerca de 33% em 2026 até julho e mais de 50% em 12 meses, segundo levantamento de mercado. A faixa é ilustrativa e extremamente ampla: não existe média confiável.",ir:0,liq:"Diária, nas plataformas",gar:"Sem garantia",min:"valores baixos, a partir de poucos reais",t:"Ganhos sujeitos a IR; regras específicas",pl:"Corretoras de criptoativos com registro, como Mercado Bitcoin e Foxbit",d:"Ativos digitais de preço muito volátil.",rk:"Já tiveram quedas acima de 70%. Há também risco de golpes e de custódia. Só considere uma parcela pequena."}
+];
+var BY={};O.forEach(function(o){BY[o.id]=o});
+var PN={cons:"Conservador",mod:"Moderado",arr:"Arrojado",agr:"Agressivo"};
+var PD={cons:"Prioriza segurança e liquidez e aceita rendimento menor para não ver o dinheiro oscilar.",mod:"Aceita oscilações moderadas em troca de rendimento acima da renda fixa mais segura.",arr:"Aceita perdas relevantes no caminho em busca de retornos maiores no longo prazo.",agr:"Foca em crescimento e tolera perdas altas e longas, com a maior parte em renda variável."};
+var PB={cons:{baixo:.85,moderado:.15,alto:0},mod:{baixo:.55,moderado:.35,alto:.10},arr:{baixo:.30,moderado:.40,alto:.30},agr:{baixo:.10,moderado:.30,alto:.60}};
+var SUG={cons:["tselic","lci","cdb","prevrf","tipca"],mod:["tselic","tipca","fii","prevmm","cdb"],arr:["fii","acoes","tipca","prevmm","multi"],agr:["acoes","intl","fii","prevrv","cripto"]};
+var RN={baixo:"Baixo",moderado:"Moderado",alto:"Alto"};
+var st={perfil:"mod",n:3,sel:[]};
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function brl(n,d){return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:d||0,minimumFractionDigits:d||0})}
+function pc(n){return (n*100).toLocaleString("pt-BR",{maximumFractionDigits:2})+"%"}
+function prevTax(m){return m<=24?.35:m<=48?.30:m<=72?.25:m<=96?.20:m<=120?.15:.10}
+function taxIR(o,m){if(o.ir===2)return prevTax(m);if(o.ir===1){var d=m*30;return d<=180?.225:d<=360?.2:d<=720?.175:.15}return 0}
+function rate(o){switch(o.k){
+ case"sel":return(R.selic+R.spSel)/100;case"cdi1":return R.cdi*R.cdb1/10000;case"cdi2":return R.cdi*R.cdb2/10000;
+ case"lci":return R.cdi*R.lci/10000;case"poup":return R.poup/100;case"prevrf":return Math.max(0,R.cdi-R.prevAdm)/100;
+ case"ipca":return(1+R.ipca/100)*(1+R.ipcaReal/100)-1;case"pre":return R.pre/100}return null}
+function proj(o,v,m){var r=rate(o);if(r===null)return null;
+ var g=v*(Math.pow(1+r,m/12)-1),net=v+g*(1-taxIR(o,m));
+ return{r:r,net:net,ann:Math.pow(net/v,12/m)-1}}
+function scen(o,v,m){var tx=o.tx==="prev"?prevTax(m):o.tx;return o.sc.map(function(a){var r=a/100,g=v*(Math.pow(1+r,m/12)-1),net=v+g*(g>0?1-tx:1);return{r:r,net:net,ann:Math.pow(net/v,12/m)-1}})}
+function weights(){
+ var sel=st.sel.map(function(id){return BY[id]}),cnt={baixo:0,moderado:0,alto:0};
+ sel.forEach(function(o){cnt[o.r]++});
+ var raw=sel.map(function(o){return Math.max(PB[st.perfil][o.r],.05)/cnt[o.r]}),sum=raw.reduce(function(a,b){return a+b},0);
+ if(sum<=0)raw=sel.map(function(){return 1}),sum=sel.length;
+ return sel.map(function(o,i){return{o:o,w:raw[i]/sum}})}
+function alloc(){var v=Math.max(0,parseFloat($("valor").value)||0),m=Math.max(1,parseInt($("prazo").value)||1);
+ return{v:v,m:m,items:weights().map(function(x){return{o:x.o,w:x.w,a:v*x.w}})}}
+function render(){
+ var A=alloc(),v=A.v,m=A.m,col={baixo:"var(--lo)",moderado:"var(--mo)",alto:"var(--hi)"};
+ if(!A.items.length){$("res").innerHTML='<p class="note">Escolha pelo menos uma opção para simular.</p>';return}
+ if(v<=0){$("res").innerHTML='<p class="note">Informe um valor maior que zero para simular.</p>';return}
+ var tot={baixo:0,moderado:0,alto:0},T={p:0,c:0,o:0};
+ A.items.forEach(function(x){tot[x.o.r]+=x.w;var p=proj(x.o,x.a,m);x.p=p;if(p){T.p+=p.net;T.c+=p.net;T.o+=p.net}else{x.s=scen(x.o,x.a,m);T.p+=x.s[0].net;T.c+=x.s[1].net;T.o+=x.s[2].net}});
+ var h="",fora=["baixo","moderado","alto"].some(function(k){return Math.abs(tot[k]-PB[st.perfil][k])>.25});
+ if(fora)h+='<div class="warn">As opções escolhidas fogem do perfil <strong>'+PN[st.perfil]+'</strong> (o perfil prevê cerca de '+pc(PB[st.perfil].baixo)+' em baixo risco, '+pc(PB[st.perfil].moderado)+' em moderado e '+pc(PB[st.perfil].alto)+' em alto). Use “Sugerir para o meu perfil” para ver uma combinação mais próxima.</div>';
+ h+='<div class="big"><div class="l">Valor simulado · perfil '+PN[st.perfil]+' · '+A.items.length+(A.items.length>1?' opções':' opção')+'</div><div class="v">'+brl(v)+'</div>';
+ var ann=Math.pow(T.c/v,12/m)-1,real=(1+ann)/(1+R.ipca/100)-1;
+ if(T.p===T.o)h+='<div class="l">Pode chegar a <strong>'+brl(T.c)+'</strong> em '+m+' meses, já descontado o IR, mantidas as taxas atuais (cerca de '+pc(ann)+' ao ano, ou '+pc(real)+' acima da inflação).</div>';
+ else h+='<div class="l">Estimativa para '+m+' meses, com IR simplificado já descontado:</div><div class="tri"><div><span class="lbl">Cenário ruim</span><strong>'+brl(T.p)+'</strong></div><div class="mid"><span class="lbl">Média histórica</span><strong>'+brl(T.c)+'</strong></div><div><span class="lbl">Cenário bom</span><strong>'+brl(T.o)+'</strong></div></div><div class="l">A média histórica equivale a cerca de '+pc(ann)+' ao ano ('+pc(real)+' acima da inflação). Não é previsão: o resultado real pode ficar fora desta faixa.</div>';
+ h+='<div class="bar" role="img" aria-label="Distribuição por risco: baixo '+pc(tot.baixo)+', moderado '+pc(tot.moderado)+', alto '+pc(tot.alto)+'">';
+ ["baixo","moderado","alto"].forEach(function(k){if(tot[k])h+='<i style="width:'+tot[k]*100+'%;background:'+col[k]+'"></i>'});
+ h+='</div><div class="legend"><span>Baixo risco: '+pc(tot.baixo)+'</span><span>Moderado: '+pc(tot.moderado)+'</span><span>Alto: '+pc(tot.alto)+'</span></div></div>';
+ ["baixo","moderado","alto"].forEach(function(k){
+  A.items.filter(function(x){return x.o.r===k}).forEach(function(x){var o=x.o;
+   h+='<article class="card"><h3><span class="badge b-'+k+'">Risco '+RN[k].toLowerCase()+'</span>'+o.n+'</h3>'+
+   '<div class="amt">'+brl(x.a)+' <span class="note">('+pc(x.w)+' da simulação)</span></div>';
+   if(x.p)h+='<div class="kv"><span>Taxa bruta estimada</span><span>'+pc(x.p.r)+' ao ano</span></div><div class="kv"><span>Valor líquido em '+m+' meses</span><span><strong>'+brl(x.p.net)+'</strong></span></div>';
+   else{var s=x.s;h+='<div class="kv"><span>Cenário ruim ('+pc(s[0].ann)+' ao ano)</span><span>'+brl(s[0].net)+'</span></div><div class="kv"><span>Média histórica ('+pc(s[1].ann)+' ao ano)</span><span><strong>'+brl(s[1].net)+'</strong></span></div><div class="kv"><span>Cenário bom ('+pc(s[2].ann)+' ao ano)</span><span>'+brl(s[2].net)+'</span></div>'}
+   h+='<div class="kv"><span>Liquidez</span><span style="text-align:right">'+o.liq+'</span></div><div class="kv"><span>Garantia</span><span style="text-align:right">'+o.gar+'</span></div>'+
+   '<details><summary>Como funciona, riscos e onde investir</summary><p>'+o.d+'</p><p><strong>Principal risco:</strong> '+o.rk+'</p>'+(o.bs?'<p><strong>Base da estimativa:</strong> '+o.bs+'</p>':'')+'<p><strong>Tributação:</strong> '+o.t+'.</p><p><strong>Aplicação mínima:</strong> '+o.min+'.</p><p><strong>Onde encontrar:</strong> '+o.pl+'.</p></details></article>'})});
+ h+='<p class="note">Renda fixa usa as taxas atuais, mantidas constantes. Para renda variável e planos multimercado, “cenário ruim”, “média histórica” e “cenário bom” vêm de faixas observadas no passado; não são previsão, e o resultado pode ser pior que o cenário ruim. O IR é simplificado e não inclui taxas de custódia, de administração (exceto na previdência em renda fixa) nem de carregamento.</p>';
+ $("res").innerHTML=h}
+
+/* Escolha das opções */
+function sugerir(){st.sel=SUG[st.perfil].slice(0,st.n)}
+function checks(){
+ $("cont").textContent="Escolhidas: "+st.sel.length+" de "+st.n;
+ var full=st.sel.length>=st.n;
+ $("opcoes").innerHTML=["baixo","moderado","alto"].map(function(k){
+  return '<h3>Risco '+RN[k].toLowerCase()+'</h3>'+O.filter(function(o){return o.r===k}).map(function(o){
+   var on=st.sel.indexOf(o.id)>=0;
+   return '<label class="opt"><input type="checkbox" data-id="'+o.id+'"'+(on?" checked":"")+(!on&&full?" disabled":"")+'><span>'+o.n+'</span></label>'}).join("")}).join("")}
+function refresh(){checks();render()}
+$("opcoes").addEventListener("change",function(e){var id=e.target.getAttribute("data-id");if(!id)return;
+ var i=st.sel.indexOf(id);if(e.target.checked&&i<0&&st.sel.length<st.n)st.sel.push(id);else if(!e.target.checked&&i>=0)st.sel.splice(i,1);refresh()});
+$("sugerir").addEventListener("click",function(){sugerir();refresh()});
+function seg(id,attr,fn){$(id).addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
+ Array.prototype.forEach.call($(id).children,function(c){c.setAttribute("aria-pressed",c===b)});fn(b.getAttribute(attr))})}
+function descPerfil(){$("perfil-desc").textContent=PN[st.perfil]+": "+PD[st.perfil]}
+seg("perfil","data-p",function(p){st.perfil=p;descPerfil();sugerir();refresh()});
+seg("qtd","data-n",function(n){st.n=+n;if(st.sel.length>st.n)st.sel=st.sel.slice(0,st.n);else sugerir();refresh()});
+["valor","prazo"].forEach(function(i){$(i).addEventListener("input",render)});
+$("rates").innerHTML=Object.keys(RL).map(function(k){return '<label>'+RL[k]+'<input type="number" inputmode="decimal" step="any" data-k="'+k+'" value="'+R[k]+'"></label>'}).join("");
+$("rates").addEventListener("input",function(e){var k=e.target.getAttribute("data-k");if(!k)return;var n=parseFloat(e.target.value);R[k]=isNaN(n)?0:n;render()});
+
+/* Cadastro */
+function lerCad(){try{return JSON.parse(localStorage.getItem(CK)||"null")}catch(e){return null}}
+function mostrarCad(){
+ var c=lerCad();$("cad-campos").hidden=!!c;$("modal").hidden=false;$("c-erro").textContent="";
+ $("c-ok").textContent=c?"Entrar":"Cadastrar e entrar";
+ $("ola").textContent=c?"Olá, "+c.nome.split(" ")[0]:"";$("sair").hidden=!c}
+$("c-tel").addEventListener("input",function(e){var d=e.target.value.replace(/\D/g,"").slice(0,11),s=d;
+ if(d.length>2){var k=d.length>10?7:6;s="("+d.slice(0,2)+") "+d.slice(2,k)+(d.length>k?"-"+d.slice(k):"")}e.target.value=s});
+$("cad").addEventListener("submit",function(e){e.preventDefault();
+ if(authOn){if(!$("c-sim").checked){$("c-erro").textContent="Confirme que entendeu que é apenas uma simulação.";return}
+  try{sessionStorage.setItem("quox-aviso","1")}catch(x){}$("c-sim").checked=false;$("modal").hidden=true;return}
+ var c=lerCad(),er=$("c-erro");
+ if(!c){
+  var nome=$("c-nome").value.trim().replace(/\s+/g," "),email=$("c-email").value.trim(),tel=$("c-tel").value.replace(/\D/g,"");
+  if(nome.length<5||nome.indexOf(" ")<0){er.textContent="Informe seu nome completo (nome e sobrenome).";$("c-nome").focus();return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){er.textContent="Informe um e-mail válido.";$("c-email").focus();return}
+  if(tel.length<10||tel.length>11){er.textContent="Informe o telefone com DDD (10 ou 11 dígitos).";$("c-tel").focus();return}
+  if(!$("c-lgpd").checked){er.textContent="Para se cadastrar, é preciso concordar com o uso dos dados.";return}
+  c={nome:nome,email:email,telefone:tel,data:new Date().toISOString()}}
+ if(!$("c-sim").checked){er.textContent="Confirme que entendeu que é apenas uma simulação.";return}
+ var novo=!lerCad();
+ try{localStorage.setItem(CK,JSON.stringify(c))}catch(x){}
+ if(novo&&CFG.cadastroUrl){try{fetch(CFG.cadastroUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({nome:c.nome,email:c.email,telefone:c.telefone,consentimento:true,data:c.data,origem:"QUOX - Finanças"}),keepalive:true}).catch(function(){})}catch(x){}}
+ $("c-sim").checked=false;$("modal").hidden=true;$("ola").textContent="Olá, "+c.nome.split(" ")[0];$("sair").hidden=false});
+$("sair").addEventListener("click",function(){
+ if(authOn){sair();return}
+ try{localStorage.removeItem(CK)}catch(x){}
+ ["c-nome","c-email","c-tel"].forEach(function(i){$(i).value=""});$("c-lgpd").checked=false;mostrarCad()});
+
+/* Atualização automática: o GitHub Actions regrava data.json nos dias úteis. Se falhar, o app segue com os valores embutidos. */
+function dmy(s){var p=String(s||"").split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:""}
+function renderOfertas(l){
+ var el=$("ofertas");if(!l||!l.length){el.hidden=true;return}
+ var g={};l.forEach(function(x){(g[x.instituicao]=g[x.instituicao]||[]).push(x)});
+ el.innerHTML='<h2>Ofertas de CDB, LCI e LCA nas plataformas</h2>'+Object.keys(g).map(function(k){
+  return '<h3>'+esc(k)+'</h3>'+g[k].map(function(x){
+   return '<div class="kv"><span>'+esc(x.tipo)+' · '+esc(x.emissor)+'</span><span style="text-align:right"><strong>'+esc(x.taxa)+'</strong>, '+esc(x.prazo)+(x.liquidez?', '+esc(x.liquidez):'')+(x.atualizado_em?' <span class="note">('+esc(dmy(x.atualizado_em))+')</span>':'')+'</span></div>'}).join("")}).join("")+
+  '<p class="note">Ofertas registradas pela equipe a partir das plataformas, sem ligação oficial com elas. Mudam ao longo do dia: confirme taxa, prazo e garantia na plataforma antes de decidir.</p>';
+ el.hidden=false}
+fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){
+ if(!d)return;
+ var q=d.sources||{},partes=[],n=0;
+ Object.keys(d.rates||{}).forEach(function(k){var v=d.rates[k];if(k in R&&typeof v==="number"&&isFinite(v)){R[k]=v;n++;
+  var el=document.querySelector('#rates input[data-k="'+k+'"]');if(el)el.value=v}});
+ if(n){if(q.bcb)partes.push("Selic, CDI e IPCA do Banco Central ("+dmy(q.bcb)+")");
+  if(q.tesouro)partes.push("Tesouro Direto de "+dmy(q.tesouro));
+  $("atual").textContent="Taxas atualizadas automaticamente: "+(partes.join("; ")||dmy(d.updatedAt))+". CDB, LCI/LCA, poupança e previdência seguem faixas típicas."}
+ var ib=d.market&&d.market.ibov;
+ if(ib&&typeof ib.pontos==="number"){var v=ib.varDia;
+  $("mercado").textContent="Ibovespa (B3): "+ib.pontos.toLocaleString("pt-BR",{maximumFractionDigits:0})+" pontos"+(typeof v==="number"?" ("+(v>=0?"+":"")+v.toLocaleString("pt-BR",{maximumFractionDigits:2})+"% no dia)":"")+(ib.hora?", às "+ib.hora:"")+"."}
+ renderOfertas(d.ofertas);
+ render()}).catch(function(){});
+
+/* ---------- Login com Supabase ---------- */
+var TELAS=["entrar","criar","confirmar","recuperar","novasenha","completar"];
+function base(){return location.origin+location.pathname.replace(/[^\/]*$/,"")}
+function tela(n){TELAS.forEach(function(t){$("a-"+t).hidden=t!==n});$("a-erro").textContent="";$("a-ok").textContent="";$("modal").hidden=true;$("auth").hidden=false}
+function erroAuth(e){var m=String((e&&e.message)||e||"").toLowerCase();
+ if(m.indexOf("invalid login")>=0)return"E-mail ou senha incorretos.";
+ if(m.indexOf("not confirmed")>=0)return"Confirme seu e-mail pelo link que enviamos antes de entrar.";
+ if(m.indexOf("already registered")>=0)return"Este e-mail já tem cadastro. Use “Entrar”.";
+ if(m.indexOf("password")>=0&&m.indexOf("least")>=0)return"A senha precisa ter pelo menos 8 caracteres.";
+ if(m.indexOf("rate limit")>=0||m.indexOf("too many")>=0)return"Muitas tentativas. Aguarde alguns minutos e tente de novo.";
+ if(m.indexOf("fetch")>=0||m.indexOf("network")>=0)return"Sem conexão. Verifique a internet e tente de novo.";
+ return"Não foi possível concluir. Tente novamente."}
+function emailOk(s){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)}
+function telOk(s){var d=s.replace(/\D/g,"");return d.length===10||d.length===11}
+function mascTel(e){var d=e.target.value.replace(/\D/g,"").slice(0,11),s=d;
+ if(d.length>2){var k=d.length>10?7:6;s="("+d.slice(0,2)+") "+d.slice(2,k)+(d.length>k?"-"+d.slice(k):"")}e.target.value=s}
+function avisoSessao(){
+ var ja=false;try{ja=!!sessionStorage.getItem("quox-aviso")}catch(x){}
+ $("auth").hidden=true;if(ja){$("modal").hidden=true;return}
+ $("cad-campos").hidden=true;$("c-ok").textContent="Entrar";$("c-erro").textContent="";$("modal").hidden=false}
+function decidir(session){
+ if(recup)return;
+ if(!session){authUser=null;$("ola").textContent="";$("sair").hidden=true;tela("entrar");return}
+ authUser=session.user;var meta=authUser.user_metadata||{};
+ sb.from("perfis").select("nome,telefone").eq("id",authUser.id).maybeSingle().then(function(r){
+  var p=r.data||{},nome=p.nome||meta.nome||meta.full_name||meta.name||authUser.email||"";
+  $("ola").textContent="Olá, "+nome.split(" ")[0];$("sair").hidden=false;
+  if(!p.telefone)tela("completar");else avisoSessao()
+ },function(){$("ola").textContent="";$("sair").hidden=false;avisoSessao()})}
+function sair(){try{sessionStorage.removeItem("quox-aviso")}catch(x){}
+ sb.auth.signOut().then(function(){decidir(null)},function(){decidir(null)})}
+function oauth(p){$("a-erro").textContent="";sb.auth.signInWithOAuth({provider:p,options:{redirectTo:base(),skipBrowserRedirect:true}}).then(function(r){if(r&&r.error){$("a-erro").textContent=erroAuth(r.error);return}var u=r&&r.data&&r.data.url;if(!u){$("a-erro").textContent="Não foi possível iniciar o login.";return}if(u.indexOf("apikey=")<0)u+=(u.indexOf("?")<0?"?":"&")+"apikey="+encodeURIComponent(CFG.supabaseKey);location.href=u},function(x){$("a-erro").textContent=erroAuth(x)})}
+function initAuth(){
+ authOn=true;sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ if(CFG.apple)Array.prototype.forEach.call(document.querySelectorAll("[data-apple]"),function(b){b.hidden=false});
+ $("a-tel").addEventListener("input",mascTel);$("p-tel").addEventListener("input",mascTel);
+ Array.prototype.forEach.call(document.querySelectorAll("[data-ir]"),function(b){b.addEventListener("click",function(){tela(b.getAttribute("data-ir"))})});
+ Array.prototype.forEach.call(document.querySelectorAll("[data-google]"),function(b){b.addEventListener("click",function(){oauth("google")})});
+ Array.prototype.forEach.call(document.querySelectorAll("[data-apple]"),function(b){b.addEventListener("click",function(){oauth("apple")})});
+ $("a-entrar").addEventListener("submit",function(e){e.preventDefault();
+  var em=$("e-email").value.trim(),se=$("e-senha").value;
+  if(!emailOk(em)||!se){$("a-erro").textContent="Informe e-mail e senha.";return}
+  sb.auth.signInWithPassword({email:em,password:se}).then(function(r){
+   if(r.error){$("a-erro").textContent=erroAuth(r.error);if(/not confirmed/i.test(r.error.message)){$("conf-email").textContent=em}return}
+   $("e-senha").value=""},function(x){$("a-erro").textContent=erroAuth(x)})});
+ $("a-criar").addEventListener("submit",function(e){e.preventDefault();var er=$("a-erro");
+  var nome=$("n-nome").value.trim().replace(/\s+/g," "),em=$("n-email").value.trim(),tel=$("a-tel").value,se=$("n-senha").value;
+  if(nome.length<5||nome.indexOf(" ")<0){er.textContent="Informe seu nome completo (nome e sobrenome).";return}
+  if(!emailOk(em)){er.textContent="Informe um e-mail válido.";return}
+  if(!telOk(tel)){er.textContent="Informe o telefone com DDD (10 ou 11 dígitos).";return}
+  if(se.length<8){er.textContent="A senha precisa ter pelo menos 8 caracteres.";return}
+  if(!$("n-lgpd").checked){er.textContent="Para se cadastrar, é preciso concordar com o uso dos dados.";return}
+  sb.auth.signUp({email:em,password:se,options:{emailRedirectTo:base(),data:{nome:nome,telefone:tel.replace(/\D/g,""),consentimento_em:new Date().toISOString()}}}).then(function(r){
+   if(r.error){er.textContent=erroAuth(r.error);return}
+   $("n-senha").value="";
+   if(r.data&&r.data.session)return;
+   $("conf-email").textContent=em;tela("confirmar")},function(x){er.textContent=erroAuth(x)})});
+ $("reenviar").addEventListener("click",function(){var em=$("conf-email").textContent;
+  sb.auth.resend({type:"signup",email:em,options:{emailRedirectTo:base()}}).then(function(r){
+   $("a-erro").textContent=r.error?erroAuth(r.error):"";$("a-ok").textContent=r.error?"":"E-mail reenviado. Pode levar alguns minutos."})});
+ $("a-recuperar").addEventListener("submit",function(e){e.preventDefault();var em=$("r-email").value.trim();
+  if(!emailOk(em)){$("a-erro").textContent="Informe um e-mail válido.";return}
+  sb.auth.resetPasswordForEmail(em,{redirectTo:base()}).then(function(r){
+   if(r.error){$("a-erro").textContent=erroAuth(r.error);return}
+   $("a-erro").textContent="";$("a-ok").textContent="Se este e-mail tiver cadastro, enviamos um link para criar a nova senha."})});
+ $("a-novasenha").addEventListener("submit",function(e){e.preventDefault();var se=$("s-senha").value;
+  if(se.length<8){$("a-erro").textContent="A senha precisa ter pelo menos 8 caracteres.";return}
+  sb.auth.updateUser({password:se}).then(function(r){
+   if(r.error){$("a-erro").textContent=erroAuth(r.error);return}
+   $("s-senha").value="";recup=false;sb.auth.getSession().then(function(g){decidir(g.data&&g.data.session)})})});
+ $("a-completar").addEventListener("submit",function(e){e.preventDefault();var tel=$("p-tel").value;
+  if(!telOk(tel)){$("a-erro").textContent="Informe o telefone com DDD (10 ou 11 dígitos).";return}
+  if(!$("p-lgpd").checked){$("a-erro").textContent="Para concluir, é preciso concordar com o uso dos dados.";return}
+  var meta=authUser.user_metadata||{};
+  sb.from("perfis").upsert({id:authUser.id,email:authUser.email,nome:meta.nome||meta.full_name||meta.name||authUser.email,telefone:tel.replace(/\D/g,""),consentimento_em:new Date().toISOString()}).then(function(r){
+   if(r.error){$("a-erro").textContent="Não foi possível salvar. Tente novamente.";return}
+   avisoSessao()})});
+ $("p-sair").addEventListener("click",sair);
+ sb.auth.onAuthStateChange(function(ev,session){
+  if(ev==="PASSWORD_RECOVERY"){recup=true;tela("novasenha");return}
+  if(ev==="TOKEN_REFRESHED"||ev==="USER_UPDATED")return;
+  setTimeout(function(){decidir(session)},0)})}
+
+descPerfil();sugerir();checks();render();
+if(CFG.supabaseUrl&&CFG.supabaseKey&&window.supabase)initAuth();else mostrarCad();
+if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("sw.js").catch(function(){});
+})();
+</script>
+<script src="site.js"></script>
+</body>
+</html>
