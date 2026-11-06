@@ -2,9 +2,9 @@
    Se você já tinha o login funcionando, copie para cá os mesmos valores que estavam no index.html antigo. */
 window.QUOX_CFG = {
   // Endereço do projeto Supabase, só até ".supabase.co" (sem /rest/v1 e sem barra no final).
-  supabaseUrl: "",
+  supabaseUrl: "https://mjospmioycadvccqlyty.supabase.co/rest/v1/",
   // Chave pública do Supabase (a "publishable" ou "anon"). Pode ficar no site, ela é pública.
-  supabaseKey: "",
+  supabaseKey: "sb_publishable_XJOchgAZ5fHS6vN5mIm3qQ_bDc6xbrJ",
   // Endereço que aceita POST para receber cadastros (opcional; Supabase já guarda os cadastros).
   cadastroUrl: "",
   // Mostrar o botão "Entrar com Apple" (só depois de configurar a Apple no Supabase).
