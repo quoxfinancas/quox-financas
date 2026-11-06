@@ -391,8 +391,7 @@ function decidir(session){
  },function(){$("ola").textContent="";$("sair").hidden=false;avisoSessao()})}
 function sair(){try{sessionStorage.removeItem("quox-aviso")}catch(x){}
  sb.auth.signOut().then(function(){decidir(null)},function(){decidir(null)})}
-function oauth(p){$("a-erro").textContent="";sb.auth.signInWithOAuth({provider:p,options:{redirectTo:base()}}).then(function(r){if(r&&r.error)$("a-erro").textContent=erroAuth(r.error)})}
-function initAuth(){
+function oauth(p){$("a-erro").textContent="";sb.auth.signInWithOAuth({provider:p,options:{redirectTo:base(),skipBrowserRedirect:true}}).then(function(r){if(r&&r.error){$("a-erro").textContent=erroAuth(r.error);return}var u=r&&r.data&&r.data.url;if(!u){$("a-erro").textContent="Não foi possível iniciar o login.";return}if(u.indexOf("apikey=")<0)u+=(u.indexOf("?")<0?"?":"&")+"apikey="+encodeURIComponent(CFG.supabaseKey);location.href=u},function(x){$("a-erro").textContent=erroAuth(x)})}function initAuth(){
  authOn=true;sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  if(CFG.apple)Array.prototype.forEach.call(document.querySelectorAll("[data-apple]"),function(b){b.hidden=false});
  $("a-tel").addEventListener("input",mascTel);$("p-tel").addEventListener("input",mascTel);
