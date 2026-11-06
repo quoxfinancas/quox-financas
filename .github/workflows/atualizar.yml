@@ -40,11 +40,16 @@ jobs:
         continue-on-error: true # se as fontes falharem, o site é publicado com os últimos valores
 
       - name: Salvar data.json no repositório
+        continue-on-error: true # se não conseguir salvar, o site ainda é publicado com as taxas novas
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data.json "$RUNNER_TEMP/data.json"
+          git fetch origin main
+          git reset --hard origin/main
+          cp "$RUNNER_TEMP/data.json" data.json
           git add data.json
-          git diff --cached --quiet || (git commit -m "Atualiza taxas" && git pull --rebase origin main && git push)
+          git diff --cached --quiet || (git commit -m "Atualiza taxas" && git push origin HEAD:main)
       - name: Montar o site
         run: |
           mkdir _site
