@@ -50,6 +50,8 @@
   </div>
   <p class="aviso erro" id="erro-salvar" hidden>Não foi possível guardar os dados neste navegador (modo privado ou armazenamento bloqueado). O que você lançar vale só até fechar a página. Faça backup.</p>
 
+  <div class="avisos" id="avisos" role="status" hidden></div>
+
   <div class="mes-nav" id="mes-nav">
     <button type="button" id="mes-ant" aria-label="Mês anterior">‹</button>
     <strong id="mes-txt" aria-live="polite"></strong>
@@ -63,9 +65,10 @@
     <div class="chat-sug" id="chat-sug"></div>
     <form class="chat-form" id="chat-form" autocomplete="off">
       <textarea id="chat-in" rows="1" maxlength="500" placeholder="Ex.: gastei 30 no mercado no cartão Nubank" aria-label="Mensagem"></textarea>
+      <button class="mic" type="button" id="chat-mic" aria-label="Falar o gasto" aria-pressed="false" title="Falar o gasto">&#127908;</button>
       <button class="btn" type="submit">Enviar</button>
     </form>
-    <p class="leg centro">A frase é interpretada no seu aparelho, nada é enviado para a internet. <button class="link-b" type="button" id="chat-manual">Prefiro preencher um formulário</button></p>
+    <p class="leg centro">A frase é interpretada no seu aparelho e o lançamento fica salvo na sua conta. Se usar o microfone, o navegador transcreve a voz com o serviço de voz dele. <button class="link-b" type="button" id="chat-manual">Prefiro preencher um formulário</button></p>
   </section>
 
   <!-- CATEGORIAS -->
@@ -83,6 +86,7 @@
       <div class="kpi"><span>Poupado</span><b id="k-taxa"></b></div>
     </div>
     <div class="painel"><h2>Dicas do assessor</h2><div id="dicas"></div></div>
+    <div class="painel" id="orc-painel" hidden><h2>Limites por categoria</h2><div id="orc-resumo"></div></div>
     <div class="painel"><h2>Para onde foi o dinheiro</h2><div id="barras"></div></div>
     <div class="painel"><h2>Por cartão e forma de pagamento</h2><div id="pags"></div></div>
     <div class="painel"><h2>Últimos 6 meses</h2><div id="hist"></div></div>
@@ -122,6 +126,55 @@
       </div>
     </div>
     <div class="painel"><div id="x-lista"></div></div>
+  </section>
+
+  <!-- PLANEJAR -->
+  <section class="tab" id="t-planejar" hidden>
+    <form class="painel" id="f-conta" novalidate>
+      <h2>Contas a pagar</h2>
+      <p class="sub">Cadastre as contas com vencimento. Eu aviso aqui no topo quando estiverem perto de vencer.</p>
+      <label>Nome<input id="c-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Conta de luz"></label>
+      <div class="grid2">
+        <label>Valor (R$)<input id="c-valor" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+        <label>Vencimento<input id="c-venc" type="date"></label>
+      </div>
+      <label>Categoria<select id="c-cat"></select></label>
+      <label class="opt"><input type="checkbox" id="c-rep"> <span>Repetir todo mês</span></label>
+      <p class="erro-t" id="c-erro" role="alert"></p>
+      <div class="linha"><button class="btn" type="submit">Cadastrar conta</button></div>
+    </form>
+    <div class="painel"><div id="c-lista"></div><div id="c-pagas"></div></div>
+
+    <form class="painel" id="f-orc" novalidate>
+      <h2>Limite por categoria</h2>
+      <p class="sub">Defina quanto quer gastar por mês em cada categoria. Aviso quando chegar a 80% e a 100%.</p>
+      <div class="grid2">
+        <label>Categoria<select id="o-cat"></select></label>
+        <label>Limite mensal (R$)<input id="o-valor" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+      </div>
+      <p class="erro-t" id="o-erro" role="alert"></p>
+      <div class="linha"><button class="btn" type="submit">Salvar limite</button></div>
+      <div id="o-lista" style="margin-top:12px"></div>
+    </form>
+
+    <form class="painel" id="f-rec" novalidate>
+      <h2>Lançamentos automáticos</h2>
+      <p class="sub">Salário, aluguel, assinaturas: cadastre uma vez e eles entram sozinhos todo mês, no dia escolhido.</p>
+      <div class="seg" role="radiogroup" aria-label="Tipo">
+        <label><input type="radio" name="r-tipo" value="despesa" checked><span>Despesa</span></label>
+        <label><input type="radio" name="r-tipo" value="receita"><span>Receita</span></label>
+      </div>
+      <label>Descrição<input id="r-desc" maxlength="80" autocomplete="off" placeholder="Ex.: Salário, Aluguel, Netflix"></label>
+      <div class="grid2">
+        <label>Valor (R$)<input id="r-valor" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+        <label>Dia do mês<input id="r-dia" inputmode="numeric" autocomplete="off" placeholder="Ex.: 5"></label>
+      </div>
+      <label>Categoria<select id="r-cat"></select></label>
+      <label class="opt"><input type="checkbox" id="r-prox"> <span>Começar só no próximo mês (se este mês já foi lançado)</span></label>
+      <p class="erro-t" id="r-erro" role="alert"></p>
+      <div class="linha"><button class="btn" type="submit">Cadastrar</button></div>
+      <div id="r-lista" style="margin-top:12px"></div>
+    </form>
   </section>
 
   <!-- DÍVIDAS -->
@@ -177,6 +230,7 @@
   <button type="button" data-tab="resumo"><i>▤</i>Resumo</button>
   <button type="button" data-tab="categorias"><i>◉</i>Categorias</button>
   <button type="button" data-tab="extrato"><i>☰</i>Extrato</button>
+  <button type="button" data-tab="planejar"><i>&#128197;</i>Planejar</button>
   <button type="button" data-tab="dividas"><i>％</i>Dívidas</button>
   <button type="button" data-tab="relatorio"><i>⎙</i>Relatório</button>
 </nav>

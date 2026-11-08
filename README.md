@@ -119,3 +119,8 @@ Você passa a guardar dados pessoais. Publique uma política de privacidade, ide
 ## Aviso
 
 O app é uma simulação educativa, não consultoria. Material divulgado a clientes deve passar pelo compliance da sua empresa.
+
+
+## Assessor: planejamento, contas e voz
+
+A aba **Planejar** reúne contas a pagar (com aviso no topo do app), limites por categoria (avisos aos 80% e 100%) e lançamentos automáticos (salário, aluguel, assinaturas). No chat, escreva "conta de luz 150 vence dia 10", "limite alimentação 800", "contas", "orçamento" ou "paguei luz". O microfone usa o reconhecimento de voz do navegador. Os dados novos ficam na tabela `assessor_extra` (rode `supabase/schema-assessor.sql` de novo no SQL Editor, é seguro repetir).

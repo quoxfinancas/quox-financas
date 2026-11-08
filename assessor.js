@@ -4,10 +4,10 @@
   var CFG = window.QUOX_CFG || {};
   var KEY = "quox-assessor-v1";
   var nuvem = !!(CFG.supabaseUrl && CFG.supabaseKey);
-  var sb = null, user = null, snap = { lanc: {}, div: {}, chat: "[]" }, outbox = [], enviando = false, descartadas = 0, legadoDados = null;
+  var sb = null, user = null, snap = { lanc: {}, div: {}, chat: "[]", extra: "" }, outbox = [], enviando = false, descartadas = 0, legadoDados = null;
   var PA = window.QuoxParser;
   var CATS_D = PA.CATS_D, CATS_R = PA.CATS_R, FORMAS = PA.FORMAS, BANCOS = PA.BANCOS;
-  var TABS = ["chat", "resumo", "categorias", "extrato", "dividas", "relatorio", "lancar"];
+  var TABS = ["chat", "resumo", "categorias", "extrato", "planejar", "dividas", "relatorio", "lancar"];
   var MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
   var $ = function (id) { return document.getElementById(id); };
   var estado = nuvem ? vazio() : carregar();
@@ -50,7 +50,7 @@
   }
 
   /* ---------- armazenamento ---------- */
-  function vazio() { return { v: 1, lanc: [], dividas: [], chat: [] }; }
+  function vazio() { return { v: 1, lanc: [], dividas: [], chat: [], orc: {}, rec: [], contas: [] }; }
   function limpar(o) {
     var r = vazio();
     if (!o || typeof o !== "object") return r;
@@ -70,10 +70,21 @@
       if (!m || (m.de !== "eu" && m.de !== "bot")) return;
       r.chat.push({ de: m.de, t: String(m.t || "").slice(0, 500), id: m.id ? String(m.id).slice(0, 30) : "" });
     });
+    if (o.orc && typeof o.orc === "object") Object.keys(o.orc).slice(0, 40).forEach(function (c) { var v = +o.orc[c]; if (isFinite(v) && v > 0 && v < 1e12) r.orc[String(c).slice(0, 40)] = Math.round(v * 100) / 100; });
+    (Array.isArray(o.rec) ? o.rec : []).slice(0, 100).forEach(function (x) {
+      if (!x || (x.tipo !== "receita" && x.tipo !== "despesa")) return;
+      var v = +x.valor, d = Math.round(+x.dia); if (!isFinite(v) || v <= 0 || v > 1e12 || !(d >= 1 && d <= 31) || !/^\d{4}-\d{2}$/.test(String(x.ult))) return;
+      r.rec.push({ id: String(x.id || uid()).slice(0, 14), tipo: x.tipo, valor: Math.round(v * 100) / 100, cat: String(x.cat || "Outros").slice(0, 40), desc: String(x.desc || "").slice(0, 80), dia: d, ult: x.ult });
+    });
+    (Array.isArray(o.contas) ? o.contas : []).slice(0, 300).forEach(function (x) {
+      if (!x) return; var v = +x.valor; if (!isFinite(v) || v <= 0 || v > 1e12 || !dataValida(String(x.venc))) return;
+      r.contas.push({ id: String(x.id || uid()).slice(0, 14), nome: String(x.nome || "Conta").slice(0, 40), valor: Math.round(v * 100) / 100, venc: x.venc, cat: String(x.cat || "Outros").slice(0, 40), repete: !!x.repete, dia: Math.min(31, Math.max(1, Math.round(+x.dia) || +String(x.venc).slice(8))), pago: !!x.pago, pagoEm: dataValida(String(x.pagoEm)) ? x.pagoEm : "", prox: x.prox ? String(x.prox).slice(0, 14) : "" });
+    });
     return r;
   }
   function carregar() { try { var s = localStorage.getItem(KEY); return s ? limpar(JSON.parse(s)) : vazio(); } catch (x) { return vazio(); } }
   function salvar() {
+    renderAvisos();
     if (nuvem && user) difusao();
     guardarCache();
     if (nuvem && user) descarregar();
@@ -173,17 +184,19 @@
   $("bancos-dl").innerHTML = BANCOS.map(function (b) { return '<option value="' + esc(b) + '">'; }).join("");
   $("l-forma").innerHTML = '<option value="">Não informado</option>' + FORMAS.map(function (f) { return '<option value="' + esc(f) + '">' + esc(f) + "</option>"; }).join("");
   document.querySelectorAll(".ap-tabs button").forEach(function (b) { if (b.getAttribute("data-tab") === marca) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
-    $("mes-nav").hidden = !(nome === "resumo" || nome === "categorias" || nome === "extrato" || nome === "relatorio");
+    $("mes-nav").hidden = !(nome === "resumo" || nome === "planejar" || nome === "categorias" || nome === "extrato" || nome === "relatorio");
     try { history.replaceState(null, "", "#" + nome); } catch (x) {}
     render();
     if (nome === "chat") rolarChat(); else window.scrollTo(0, 0);
   }
   function render() {
     $("mes-txt").textContent = mesLabel(mes);
+    renderAvisos();
     if (tabAtual === "chat") renderChat();
     else if (tabAtual === "resumo") renderResumo();
     else if (tabAtual === "categorias") renderCategorias();
     else if (tabAtual === "extrato") renderExtrato();
+    else if (tabAtual === "planejar") renderPlanejar();
     else if (tabAtual === "dividas") renderDividas();
     else if (tabAtual === "relatorio") renderRelatorio();
     else if (tabAtual === "lancar") renderLancar();
@@ -206,6 +219,7 @@
     $("k-taxa").textContent = t.taxa == null ? "–" : pct(t.taxa);
     $("dicas").innerHTML = dicasHtml(insights(mes), 3) + '<p class="leg">Dicas automáticas, baseadas nos seus lançamentos. Veja todas na aba Relatório.</p>';
     $("barras").innerHTML = barrasHtml(t);
+    var ob = orcBarras(false); $("orc-painel").hidden = !ob; $("orc-resumo").innerHTML = ob;
     var ps = pagsOrdenadas(t);
     $("pags").innerHTML = !ps.length ? '<p class="vazio">Sem despesas neste mês.</p>' : ps.map(function (c) {
       var p = (c[1] / t.desp) * 100;
@@ -291,6 +305,7 @@
 
   /* ---------- chat ---------- */
   var MSG_AJUDA = "Escreva o gasto do seu jeito, e eu lanço na categoria certa. Exemplos:\n• gastei 30 no mercado no cartão Nubank\n• uber 18,50 no pix ontem\n• recebi 3500 de salário no Itaú\n• paguei 120 de luz no débito\n\nPara lançar vários de uma vez, escreva um por linha. Também entendo: \"resumo\", \"cartões\", \"quanto gastei com farmácia\" e \"desfazer\".";
+  MSG_AJUDA += "\n\nTambém entendo:\n• conta de luz 150 vence dia 10\n• limite alimentação 800\n• contas (ver o que vence)\n• orçamento (ver os limites)\n• paguei a luz (dar baixa na conta)\n• ou toque no microfone e fale o gasto";
   function mesReal() { return hoje().slice(0, 7); }
   function pushChat(de, t, id) { estado.chat.push({ de: de, t: t, id: id || "" }); if (estado.chat.length > 60) estado.chat = estado.chat.slice(-60); }
   function renderChat() {
@@ -325,8 +340,10 @@
     var r = PA.interpretar(frase, new Date());
     if (!r.ok) return { texto: r.erro === "sem-valor" ? "Não achei o valor em \"" + frase + "\". Inclua o número, por exemplo: gastei 30 no mercado no cartão Nubank." : "Não consegui entender essa frase.", id: "" };
     var l = { id: uid(), tipo: r.tipo, valor: r.valor, cat: r.cat, data: r.data, desc: r.desc.slice(0, 80), forma: r.forma, banco: r.banco };
+    var antesOrc = gastoCat(l.cat, l.data.slice(0, 7));
     estado.lanc.push(l);
     var nota = "";
+    var ao = avisoOrc(l, antesOrc); if (ao) nota += "\n" + ao;
     if (r.formaSuposta) nota += "\nVi um banco e considerei cartão de crédito. Se foi débito ou Pix, toque em Editar.";
     if (r.semCategoria) nota += "\nNão reconheci a categoria e coloquei em Outros. Toque em Editar para mudar.";
     if (r.dataErro) nota += "\nNão entendi a data, então usei hoje.";
@@ -358,6 +375,14 @@
       if (ult) { $("chat-in").value = ""; desfazerChat(ult); return; } resp = "Não tenho um lançamento recente do chat para desfazer. Você também pode excluir na aba Extrato.";
     }
     else if (/^(limpar (a )?conversa|apagar (a )?conversa)/.test(n)) { estado.chat = []; salvar(); $("chat-in").value = ""; renderChat(); return; }
+    else if (PA.ehConta(texto)) { resp = PA.dividir(texto).map(adicionarContaChat).join("\n\n"); }
+    else if (temNum && PA.ehLimite(texto)) {
+      var lm = PA.interpretarLimite(texto);
+      resp = lm.ok ? definirLimiteChat(lm) : "Para definir um limite, diga a categoria e o valor. Exemplo: limite alimentação 800.";
+    }
+    else if (!temNum && /(^|\s)(contas|vencimentos?|a pagar|o que vence|proximas contas)(\s|$)/.test(n)) resp = respostaContas();
+    else if (!temNum && /(orcamento|limites?)/.test(n)) resp = respostaOrcamento();
+    else if (!temNum && /^(paguei|pago|quitei|ja paguei)\b/.test(n) && contaPorTexto(n)) resp = pagarConta(contaPorTexto(n).id, true);
     else if (!temNum && /quanto/.test(n) && PA.categoriaCitada(texto)) resp = respostaCategoria(PA.categoriaCitada(texto));
     else if (!temNum && /(cartao|cartoes|fatura|banco|nubank|itau|bradesco|santander|inter\b)/.test(n)) resp = respostaCartoes();
     else if (!temNum && /(resumo|saldo|quanto (eu )?(gastei|gastamos|recebi)|como estou|extrato)/.test(n)) resp = respostaResumo();
@@ -436,11 +461,12 @@
     if (!dataValida(data)) { err.textContent = "Escolha uma data válida."; return; }
     err.textContent = "";
     var reg = { id: editLanc || uid(), tipo: tipo, valor: Math.round(v * 100) / 100, cat: $("l-cat").value, data: data, desc: $("l-desc").value.trim().slice(0, 80), forma: $("l-forma").value, banco: $("l-banco").value.trim().slice(0, 30) };
-    if (editLanc) estado.lanc = estado.lanc.map(function (x) { return x.id === editLanc ? reg : x; }); else estado.lanc.push(reg);
+    var antesOrc = gastoCat(reg.cat, reg.data.slice(0, 7)), avOrc = "";
+    if (editLanc) estado.lanc = estado.lanc.map(function (x) { return x.id === editLanc ? reg : x; }); else { estado.lanc.push(reg); avOrc = avisoOrc(reg, antesOrc); }
     var foraDoMes = data.slice(0, 7) !== mes;
     var tinhaEdicao = !!editLanc;
     salvar(); fimEdicao();
-    toast(tinhaEdicao ? "Alterações salvas" : "Lançamento salvo" + (foraDoMes ? " em " + mesLabel(data.slice(0, 7)) : ""));
+    toast(tinhaEdicao ? "Alterações salvas" : "Lançamento salvo" + (foraDoMes ? " em " + mesLabel(data.slice(0, 7)) : "") + (avOrc ? ". " + avOrc : ""));
     renderLancar();
   }
   function submitDiv(ev) {
@@ -524,7 +550,7 @@
     catch (x) { $("erro-salvar").hidden = false; }
   }
   function snapshotDe(e) {
-    var s = { lanc: {}, div: {}, chat: JSON.stringify(e.chat) };
+    var s = { lanc: {}, div: {}, chat: JSON.stringify(e.chat), extra: JSON.stringify([e.orc, e.rec, e.contas]) };
     e.lanc.forEach(function (l) { s.lanc[l.id] = JSON.stringify(l); });
     e.dividas.forEach(function (d) { s.div[d.id] = JSON.stringify(d); });
     return s;
@@ -539,6 +565,7 @@
     estado.dividas.forEach(function (d) { if (snap.div[d.id] !== novo.div[d.id]) enfileirar({ k: "div", a: "up", id: d.id, row: linhaDiv(d) }); });
     Object.keys(snap.div).forEach(function (id) { if (!(id in novo.div)) enfileirar({ k: "div", a: "del", id: id }); });
     if (snap.chat !== novo.chat) enfileirar({ k: "chat", a: "up", id: "chat" });
+    if (snap.extra !== novo.extra) enfileirar({ k: "extra", a: "up", id: "extra" });
     snap = novo;
   }
   function statusSync(modo) {
@@ -551,7 +578,8 @@
     return /fetch|network|load failed|timeout|failed to/.test(m) || st === 0 || st === 401 || st === 429 || st >= 500;
   }
   function requisicao(lote) {
-    var op = lote[0], tabela = op.k === "lanc" ? "lancamentos" : op.k === "div" ? "dividas" : "assessor_chat";
+    var op = lote[0], tabela = op.k === "lanc" ? "lancamentos" : op.k === "div" ? "dividas" : op.k === "extra" ? "assessor_extra" : "assessor_chat";
+    if (op.k === "extra") return sb.from(tabela).upsert({ user_id: user.id, dados: { orc: estado.orc, rec: estado.rec, contas: estado.contas }, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
     if (op.k === "chat") return sb.from(tabela).upsert({ user_id: user.id, msgs: estado.chat, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
     if (op.a === "del") return sb.from(tabela).delete().in("id", lote.map(function (o) { return o.id; }));
     return sb.from(tabela).upsert(lote.map(function (o) { return o.row; }), { onConflict: "user_id,id" });
@@ -559,7 +587,7 @@
   function passo() {
     if (!outbox.length) return Promise.resolve(true);
     var op = outbox[0], n = 1;
-    if (op.k !== "chat") while (n < outbox.length && n < 100 && outbox[n].k === op.k && outbox[n].a === op.a) n++;
+    if (op.k !== "chat" && op.k !== "extra") while (n < outbox.length && n < 100 && outbox[n].k === op.k && outbox[n].a === op.a) n++;
     var lote = outbox.slice(0, n);
     return Promise.resolve(requisicao(lote)).then(function (r) {
       if (r && r.error) { if (erroRede(r)) return false; descartadas++; }
@@ -594,16 +622,21 @@
     return Promise.all([
       pagina("lancamentos", "id,tipo,valor,cat,data,descr,forma,banco"),
       pagina("dividas", "id,nome,saldo,juros,parcela"),
-      sb.from("assessor_chat").select("msgs").maybeSingle()
+      sb.from("assessor_chat").select("msgs").maybeSingle(),
+      Promise.resolve(sb.from("assessor_extra").select("dados").maybeSingle()).then(function (r) { return r; }, function () { return { data: null }; })
     ]).then(function (v) {
       if (outbox.length || enviando) return;
       var chat = v[2] && v[2].data && Array.isArray(v[2].data.msgs) ? v[2].data.msgs : [];
+      var ex = v[3] && !v[3].error && v[3].data && v[3].data.dados && typeof v[3].data.dados === "object" ? v[3].data.dados : null;
       estado = limpar({
         lanc: v[0].map(function (r) { return { id: r.id, tipo: r.tipo, valor: +r.valor, cat: r.cat, data: r.data, desc: r.descr, forma: r.forma, banco: r.banco }; }),
         dividas: v[1].map(function (r) { return { id: r.id, nome: r.nome, saldo: +r.saldo, juros: +r.juros, parcela: +r.parcela }; }),
-        chat: chat
+        chat: chat,
+        orc: ex ? ex.orc : estado.orc, rec: ex ? ex.rec : estado.rec, contas: ex ? ex.contas : estado.contas
       });
-      snap = snapshotDe(estado); guardarCache(); statusSync(); render();
+      snap = snapshotDe(estado);
+      if (!ex && (Object.keys(estado.orc).length || estado.rec.length || estado.contas.length)) enfileirar({ k: "extra", a: "up", id: "extra" });
+      gerarRecorrentes(); guardarCache(); statusSync(); render(); descarregar();
     }).catch(function () { statusSync(); });
   }
   function sincronizarTudo() { return descarregar().then(function () { if (!outbox.length) return baixar(); }); }
@@ -627,6 +660,7 @@
     } catch (x) {}
   }
   function iniciarUI() {
+    gerarRecorrentes();
     var h0 = (location.hash || "").slice(1);
     setTab(TABS.indexOf(h0) >= 0 ? h0 : "chat");
   }
@@ -692,6 +726,195 @@
   }
   function lerCacheDe(u) { try { return !!localStorage.getItem(KEY + ":" + u.id); } catch (x) { return false; } }
 
+
+  /* ---------- Fase 1: orçamento, contas a pagar, recorrentes e voz ---------- */
+  function mesDia(ym, dia) { var u = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate(); return ym + "-" + pad(Math.min(dia, u)); }
+  function diasEntre(a, b) { var pa = a.split("-"), pb = b.split("-"); return Math.round((Date.UTC(+pb[0], +pb[1] - 1, +pb[2]) - Date.UTC(+pa[0], +pa[1] - 1, +pa[2])) / 86400000); }
+  function dmy(iso) { return iso.split("-").reverse().join("/"); }
+  function gastoCat(cat, ym) { var s = 0; estado.lanc.forEach(function (l) { if (l.tipo === "despesa" && l.cat === cat && l.data.slice(0, 7) === ym) s += l.valor; }); return s; }
+  function avisoOrc(l, antes) {
+    if (l.tipo !== "despesa") return "";
+    var lim = estado.orc[l.cat]; if (!lim) return "";
+    var ym = l.data.slice(0, 7), dep = gastoCat(l.cat, ym), a = antes / lim * 100, d = dep / lim * 100;
+    if (d >= 100 && a < 100) return "Limite estourado em " + l.cat + ": " + R(dep) + " de " + R(lim) + " em " + mesLabel(ym) + ".";
+    if (d >= 80 && a < 80) return "Atenção: " + l.cat + " já está em " + pct(d) + " do limite (" + R(dep) + " de " + R(lim) + ").";
+    return "";
+  }
+  function orcBarras(acoes) {
+    var cats = Object.keys(estado.orc).sort(); if (!cats.length) return "";
+    return cats.map(function (c) {
+      var lim = estado.orc[c], g = gastoCat(c, mes), p = g / lim * 100, cl = p >= 100 ? "over" : p >= 80 ? "warn" : "ok";
+      return '<div class="barra"><div class="t"><span>' + esc(c) + "</span><span>" + R(g) + " de " + R(lim) + " · " + pct(p) + '</span></div><div class="trilho"><span class="fill ' + cl + '" style="width:' + Math.min(100, Math.max(2, p)) + '%"></span></div>' +
+        (acoes ? '<div class="acs"><button class="mini-b" type="button" data-oed="' + esc(c) + '">Editar</button><button class="mini-b perigo" type="button" data-odel="' + esc(c) + '">Remover</button></div>' : "") + "</div>";
+    }).join("");
+  }
+  function statusConta(c) {
+    var d = diasEntre(hoje(), c.venc);
+    if (d < 0) return { t: "Atrasada há " + (-d) + (d === -1 ? " dia" : " dias"), cl: "over" };
+    if (d === 0) return { t: "Vence hoje", cl: "warn" };
+    if (d === 1) return { t: "Vence amanhã", cl: "warn" };
+    return { t: "Vence em " + d + " dias", cl: d <= 3 ? "warn" : "ok" };
+  }
+  function pendentes() { return estado.contas.filter(function (c) { return !c.pago; }).sort(function (a, b) { return a.venc < b.venc ? -1 : a.venc > b.venc ? 1 : 0; }); }
+  function itemConta(c) {
+    var s = statusConta(c);
+    return '<div class="item"><div class="l"><b>' + esc(c.nome) + "</b><small>" + dmy(c.venc) + (c.repete ? " · todo mês" : "") + '</small><span class="st ' + s.cl + '">' + esc(s.t) + '</span><div class="acs"><button class="mini-b" type="button" data-cpagar="' + esc(c.id) + '">Marcar como paga</button><button class="mini-b perigo" type="button" data-cdel="' + esc(c.id) + '">Excluir</button></div></div><div class="v neg">' + R(c.valor) + "</div></div>";
+  }
+  function renderPlanejar() {
+    $("o-cat").innerHTML = CATS_D.filter(function (c) { return c !== "Outros"; }).concat(["Outros"]).map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("");
+    $("r-cat").innerHTML = (recTipo() === "receita" ? CATS_R : CATS_D).map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("");
+    $("o-lista").innerHTML = orcBarras(true) || '<p class="vazio">Nenhum limite definido. Escolha uma categoria e um valor mensal, e eu aviso quando você chegar a 80% e a 100%.</p>';
+    $("o-lista").querySelectorAll("[data-oed]").forEach(function (b) { b.addEventListener("click", function () { var c = b.getAttribute("data-oed"); $("o-cat").value = c; $("o-valor").value = String(estado.orc[c]).replace(".", ","); $("o-valor").focus(); }); });
+    $("o-lista").querySelectorAll("[data-odel]").forEach(function (b) { duplo(b, "Confirmar?", function () { delete estado.orc[b.getAttribute("data-odel")]; salvar(); render(); }); });
+    var pend = pendentes(), pagas = estado.contas.filter(function (c) { return c.pago; }).sort(function (a, b) { return a.pagoEm < b.pagoEm ? 1 : -1; }).slice(0, 5);
+    $("c-lista").innerHTML = pend.length ? pend.map(itemConta).join("") : '<p class="vazio">Nenhuma conta a pagar. Cadastre aqui ou escreva no chat, por exemplo: conta de luz 150 vence dia 10.</p>';
+    $("c-pagas").innerHTML = pagas.length ? '<details class="cat"><summary><span class="cn">Pagas recentemente</span></summary>' + pagas.map(function (c) {
+      return '<div class="item"><div class="l"><b>' + esc(c.nome) + "</b><small>Paga em " + dmy(c.pagoEm) + '</small><div class="acs"><button class="mini-b" type="button" data-cdesf="' + esc(c.id) + '">Desfazer pagamento</button></div></div><div class="v">' + R(c.valor) + "</div></div>";
+    }).join("") + "</details>" : "";
+    $("c-lista").querySelectorAll("[data-cpagar]").forEach(function (b) { b.addEventListener("click", function () { pagarConta(b.getAttribute("data-cpagar")); }); });
+    $("c-lista").querySelectorAll("[data-cdel]").forEach(function (b) { duplo(b, "Confirmar?", function () { estado.contas = estado.contas.filter(function (x) { return x.id !== b.getAttribute("data-cdel"); }); salvar(); render(); }); });
+    $("c-pagas").querySelectorAll("[data-cdesf]").forEach(function (b) { b.addEventListener("click", function () { desfazerPagamento(b.getAttribute("data-cdesf")); }); });
+    $("r-lista").innerHTML = estado.rec.length ? estado.rec.map(function (r) {
+      return '<div class="item"><div class="l"><b>' + esc(r.desc || r.cat) + "</b><small>" + esc(r.cat) + " · todo dia " + r.dia + '</small><div class="acs"><button class="mini-b perigo" type="button" data-rdel="' + esc(r.id) + '">Excluir</button></div></div><div class="v ' + (r.tipo === "receita" ? "pos" : "neg") + '">' + (r.tipo === "receita" ? "+" : "−") + R(r.valor) + "</div></div>";
+    }).join("") : '<p class="vazio">Nenhum lançamento automático. Cadastre salário, aluguel, assinaturas e outros valores que se repetem todo mês.</p>';
+    $("r-lista").querySelectorAll("[data-rdel]").forEach(function (b) { duplo(b, "Confirmar?", function () { estado.rec = estado.rec.filter(function (x) { return x.id !== b.getAttribute("data-rdel"); }); salvar(); render(); toast("Excluído. Os lançamentos já criados continuam no extrato."); }); });
+  }
+  function recTipo() { var r = document.querySelector('input[name="r-tipo"]:checked'); return r ? r.value : "despesa"; }
+  function pagarConta(id, doChat) {
+    var c = estado.contas.filter(function (x) { return x.id === id; })[0]; if (!c || c.pago) return "Essa conta já está paga.";
+    var l = { id: "c" + c.id, tipo: "despesa", valor: c.valor, cat: c.cat || "Outros", data: hoje(), desc: c.nome.slice(0, 80), forma: "", banco: "" };
+    var antes = gastoCat(l.cat, l.data.slice(0, 7));
+    estado.lanc = estado.lanc.filter(function (x) { return x.id !== l.id; }); estado.lanc.push(l);
+    c.pago = true; c.pagoEm = hoje();
+    if (c.repete) {
+      var p = c.venc.split("-"), prox = mesDia(addMes(p[0] + "-" + p[1], 1), c.dia || +p[2]), nova = { id: uid(), nome: c.nome, valor: c.valor, venc: prox, cat: c.cat, repete: true, dia: c.dia || +p[2], pago: false, pagoEm: "", prox: "" };
+      estado.contas.push(nova); c.prox = nova.id;
+    }
+    var pagas = estado.contas.filter(function (x) { return x.pago; }).sort(function (a, b) { return a.pagoEm < b.pagoEm ? 1 : -1; });
+    pagas.slice(20).forEach(function (x) { estado.contas = estado.contas.filter(function (y) { return y !== x; }); });
+    var av = avisoOrc(l, antes), txt = "Dei baixa em " + c.nome + " (" + R(c.valor) + ") e lancei nas despesas." + (c.repete ? " A próxima vence em " + dmy(estado.contas[estado.contas.length - 1].venc) + "." : "") + (av ? "\n" + av : "");
+    salvar(); render();
+    if (!doChat) toast(txt.split("\n")[0]);
+    return txt;
+  }
+  function desfazerPagamento(id) {
+    var c = estado.contas.filter(function (x) { return x.id === id; })[0]; if (!c) return;
+    estado.lanc = estado.lanc.filter(function (x) { return x.id !== "c" + c.id; });
+    if (c.prox) estado.contas = estado.contas.filter(function (x) { return !(x.id === c.prox && !x.pago); });
+    c.pago = false; c.pagoEm = ""; c.prox = "";
+    salvar(); render(); toast("Pagamento desfeito");
+  }
+  function contaPorTexto(n) {
+    var tk = n.split(/[^a-z0-9]+/), ach = null, mx = 0;
+    pendentes().forEach(function (c) {
+      var ws = PA.sem(c.nome).split(/[^a-z0-9]+/).filter(function (w) { return w.length >= 3 && ["conta", "contas", "pagar", "dos", "das", "para"].indexOf(w) < 0; });
+      var k = ws.filter(function (w) { return tk.indexOf(w) >= 0; }).length;
+      if (k > mx) { mx = k; ach = c; }
+    });
+    return ach;
+  }
+  function novaConta(nome, valor, venc, cat, repete) {
+    var c = { id: uid(), nome: nome.slice(0, 40), valor: valor, venc: venc, cat: cat || "Outros", repete: !!repete, dia: +venc.slice(8), pago: false, pagoEm: "", prox: "" };
+    estado.contas.push(c); return c;
+  }
+  function adicionarContaChat(frase) {
+    var r = PA.interpretarConta(frase, new Date());
+    if (!r.ok) return r.erro === "sem-data" ? "Entendi o valor " + R(r.valor) + ", mas faltou o vencimento. Escreva assim: conta de luz " + String(r.valor).replace(".", ",") + " vence dia 10." : "Não consegui entender essa conta. Exemplo: conta de luz 150 vence dia 10.";
+    var c = novaConta(r.nome, r.valor, r.venc, r.cat, r.repete);
+    return "Conta anotada: " + c.nome + ", " + R(c.valor) + ", vence em " + dmy(c.venc) + (c.repete ? " (todo mês)" : "") + ". Vou avisar aqui no topo quando estiver perto. Para dar baixa, escreva \"paguei " + c.nome.toLowerCase() + "\".";
+  }
+  function definirLimiteChat(r) {
+    estado.orc[r.cat] = r.valor;
+    var g = gastoCat(r.cat, mesReal());
+    return "Limite de " + r.cat + " definido em " + R(r.valor) + " por mês. Neste mês você já gastou " + R(g) + " (" + pct(g / r.valor * 100) + "). Aviso quando chegar a 80% e a 100%.";
+  }
+  function respostaContas() {
+    var p = pendentes(); if (!p.length) return "Você não tem contas a pagar cadastradas. Exemplo: conta de luz 150 vence dia 10.";
+    return "Contas a pagar:\n" + p.slice(0, 8).map(function (c) { return "• " + c.nome + ": " + R(c.valor) + ", " + statusConta(c).t.toLowerCase() + " (" + dmy(c.venc) + ")"; }).join("\n") + (p.length > 8 ? "\n… e mais " + (p.length - 8) + " na aba Planejar." : "");
+  }
+  function respostaOrcamento() {
+    var cs = Object.keys(estado.orc).sort(); if (!cs.length) return "Você ainda não definiu limites. Exemplo: limite alimentação 800.";
+    var m = mesReal();
+    return "Seus limites em " + mesLabel(m) + ":\n" + cs.map(function (c) { var g = gastoCat(c, m); return "• " + c + ": " + R(g) + " de " + R(estado.orc[c]) + " (" + pct(g / estado.orc[c] * 100) + ")"; }).join("\n");
+  }
+  function renderAvisos() {
+    var el = $("avisos"); if (!el) return;
+    var at = 0, hj = 0, pr = 0, partes = [];
+    pendentes().forEach(function (c) { var d = diasEntre(hoje(), c.venc); if (d < 0) at++; else if (d === 0) hj++; else if (d <= 3) pr++; });
+    if (at) partes.push(at + (at === 1 ? " conta atrasada" : " contas atrasadas"));
+    if (hj) partes.push(hj + (hj === 1 ? " conta vence hoje" : " contas vencem hoje"));
+    if (pr) partes.push(pr + (pr === 1 ? " conta vence" : " contas vencem") + " em até 3 dias");
+    var m = mesReal(), estouro = Object.keys(estado.orc).filter(function (c) { return gastoCat(c, m) >= estado.orc[c]; });
+    if (estouro.length) partes.push("limite estourado: " + estouro.slice(0, 2).join(", ") + (estouro.length > 2 ? " e mais " + (estouro.length - 2) : ""));
+    if (!partes.length) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false; el.className = "avisos" + (at || estouro.length ? " over" : "");
+    el.innerHTML = "<span><b>Atenção:</b> " + esc(partes.join(" · ")) + '</span><button class="link-b" type="button" id="av-ver">Ver</button>';
+    $("av-ver").addEventListener("click", function () { setTab("planejar"); });
+  }
+  function gerarRecorrentes() {
+    var h = hoje(), ym = h.slice(0, 7), mudou = false;
+    estado.rec.forEach(function (r) {
+      var m = addMes(r.ult, 1), n = 0;
+      while (m <= ym && n < 12) {
+        var data = mesDia(m, r.dia); if (data > h) break;
+        var id = "r" + r.id + "_" + m;
+        if (!estado.lanc.some(function (x) { return x.id === id; })) estado.lanc.push({ id: id, tipo: r.tipo, valor: r.valor, cat: r.cat, data: data, desc: r.desc, forma: "", banco: "" });
+        r.ult = m; mudou = true; m = addMes(m, 1); n++;
+      }
+    });
+    if (mudou) { if (typeof salvarSeguro === "function") salvarSeguro(); }
+  }
+  function salvarSeguro() { if (nuvem && !user) return; salvar(); }
+  function submitConta(ev) {
+    ev.preventDefault();
+    var nome = $("c-nome").value.trim() || "Conta", v = parseBR($("c-valor").value), d = $("c-venc").value, er = $("c-erro");
+    if (!isFinite(v) || v <= 0) { er.textContent = "Informe o valor da conta."; return; }
+    if (!dataValida(d)) { er.textContent = "Escolha a data de vencimento."; return; }
+    er.textContent = "";
+    novaConta(nome, Math.round(v * 100) / 100, d, $("c-cat").value, $("c-rep").checked);
+    $("c-nome").value = ""; $("c-valor").value = ""; $("c-venc").value = ""; $("c-rep").checked = false;
+    salvar(); render(); toast("Conta cadastrada");
+  }
+  function submitOrc(ev) {
+    ev.preventDefault();
+    var v = parseBR($("o-valor").value), er = $("o-erro");
+    if (!isFinite(v) || v <= 0) { er.textContent = "Informe o limite mensal em reais."; return; }
+    er.textContent = ""; estado.orc[$("o-cat").value] = Math.round(v * 100) / 100; $("o-valor").value = "";
+    salvar(); render(); toast("Limite salvo");
+  }
+  function submitRec(ev) {
+    ev.preventDefault();
+    var v = parseBR($("r-valor").value), dia = Math.round(+$("r-dia").value), er = $("r-erro");
+    if (!isFinite(v) || v <= 0) { er.textContent = "Informe o valor."; return; }
+    if (!(dia >= 1 && dia <= 31)) { er.textContent = "Informe o dia do mês (1 a 31)."; return; }
+    er.textContent = "";
+    var inicio = $("r-prox").checked ? addMes(mesReal(), 1) : mesReal();
+    estado.rec.push({ id: uid().slice(0, 12), tipo: recTipo(), valor: Math.round(v * 100) / 100, cat: $("r-cat").value, desc: $("r-desc").value.trim().slice(0, 80), dia: dia, ult: addMes(inicio, -1) });
+    $("r-valor").value = ""; $("r-desc").value = ""; $("r-dia").value = ""; $("r-prox").checked = false;
+    gerarRecorrentes(); salvar(); render(); toast("Lançamento automático cadastrado");
+  }
+  /* voz: usa o reconhecimento de fala do navegador */
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, ouvindo = null, PH_CHAT = "";
+  function iniciarVoz() {
+    var b = $("chat-mic"); if (!b) return;
+    if (!SR) { b.hidden = true; return; }
+    PH_CHAT = $("chat-in").placeholder;
+    b.addEventListener("click", function () {
+      if (ouvindo) { ouvindo.stop(); return; }
+      var r = new SR(), fim = "";
+      r.lang = "pt-BR"; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+      r.onstart = function () { ouvindo = r; b.classList.add("gravando"); b.setAttribute("aria-pressed", "true"); $("chat-in").placeholder = "Ouvindo… fale o gasto"; };
+      r.onresult = function (ev) { var t = ""; for (var i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript; $("chat-in").value = t; if (ev.results[ev.results.length - 1].isFinal) fim = t; };
+      r.onerror = function (ev) {
+        if (ev.error === "not-allowed" || ev.error === "service-not-allowed") toast("Permita o uso do microfone para falar os gastos.");
+        else if (ev.error === "no-speech") toast("Não ouvi nada. Toque no microfone e tente de novo.");
+        else if (ev.error === "network") toast("Sem internet para reconhecer a voz.");
+      };
+      r.onend = function () { ouvindo = null; b.classList.remove("gravando"); b.setAttribute("aria-pressed", "false"); $("chat-in").placeholder = PH_CHAT; if (fim.trim()) enviarChat(fim); };
+      try { r.start(); } catch (x) { ouvindo = null; }
+    });
+  }
+
   /* ---------- eventos ---------- */
   document.querySelectorAll(".ap-tabs button").forEach(function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
   $("mes-ant").addEventListener("click", function () { mes = addMes(mes, -1); render(); });
@@ -700,6 +923,12 @@
   $("f-lanc").addEventListener("submit", submitLanc);
   $("l-cancel").addEventListener("click", function () { fimEdicao(); });
   $("f-div").addEventListener("submit", submitDiv);
+  $("f-conta").addEventListener("submit", submitConta);
+  $("f-orc").addEventListener("submit", submitOrc);
+  $("f-rec").addEventListener("submit", submitRec);
+  document.querySelectorAll('input[name="r-tipo"]').forEach(function (r) { r.addEventListener("change", renderPlanejar); });
+  $("c-cat").innerHTML = CATS_D.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("");
+  iniciarVoz();
   $("d-cancel").addEventListener("click", fimEdicaoDiv);
   $("x-tipo").addEventListener("change", renderExtrato);
   $("x-busca").addEventListener("input", renderExtrato);
@@ -749,7 +978,7 @@
     $("legado").hidden = true; legadoDados = null; toast("Dados enviados para a sua conta"); render();
   });
   duplo($("leg-desc"), "Confirmar descarte?", function () { try { localStorage.removeItem(KEY); } catch (x) {} $("legado").hidden = true; legadoDados = null; });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden && nuvem && user) sincronizarTudo(); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { gerarRecorrentes(); render(); } if (!document.hidden && nuvem && user) sincronizarTudo(); });
   window.addEventListener("online", function () { if (nuvem && user) sincronizarTudo(); });
   setInterval(function () { if (nuvem && user && outbox.length) descarregar(); }, 30000);
 

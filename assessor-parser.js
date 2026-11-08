@@ -180,7 +180,53 @@
     return x ? x.cat : null;
   }
 
-  var api = { interpretar: interpretar, dividir: dividir, categoriaCitada: categoriaCitada, sem: sem, CATS_D: CATS_D, CATS_R: CATS_R, FORMAS: FORMAS, BANCOS: BANCOS };
+
+  /* ---- Fase 1: contas a pagar e limites de orçamento ---- */
+  function proxData(n, hoje) {
+    var d0 = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()), m, t;
+    if (/\bamanha\b/.test(n)) { d0.setDate(d0.getDate() + 1); return iso(d0); }
+    if (/\bhoje\b/.test(n)) return iso(d0);
+    if ((m = n.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/))) {
+      var dia = +m[1], mes = +m[2], ano = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : hoje.getFullYear();
+      t = new Date(ano, mes - 1, dia);
+      if (t.getFullYear() !== ano || t.getMonth() !== mes - 1 || t.getDate() !== dia) return null;
+      if (!m[3] && t < d0) t = new Date(ano + 1, mes - 1, dia);
+      return iso(t);
+    }
+    if ((m = n.match(/\bdia\s+(\d{1,2})\b/))) {
+      var di = +m[1]; if (di < 1 || di > 31) return null;
+      var y = hoje.getFullYear(), mo = hoje.getMonth();
+      t = new Date(y, mo, di); if (t.getDate() !== di) t = new Date(y, mo + 1, 0);
+      if (t < d0) { t = new Date(y, mo + 1, di); if (t.getDate() !== di) t = new Date(y, mo + 2, 0); }
+      return iso(t);
+    }
+    return null;
+  }
+  var RE_CONTA = /(^|[^a-z0-9])(vence|vencem|vencimento|venc|vencendo|a pagar|agendar|agende|lembrar|lembre|lembra)([^a-z0-9]|$)/;
+  var RE_LIMITE = /(^|[^a-z0-9])(limite|orcamento|teto|meta de gasto)([^a-z0-9]|$)/;
+  function ehConta(texto) { var n = sem(texto); return RE_CONTA.test(n) && isFinite(acharValor(n)); }
+  function interpretarConta(texto, hojeDate) {
+    var hoje = hojeDate || new Date(), bruto = String(texto || "").trim(), n = sem(bruto);
+    var valor = acharValor(n); if (!isFinite(valor) || valor <= 0) return { ok: false, erro: "sem-valor" };
+    var venc = proxData(n, hoje); if (!venc) return { ok: false, erro: "sem-data", valor: valor };
+    var achou = melhorCat(n, LD), cat = achou ? achou.cat : "Outros", nome = achou ? cap(achou.kw) : "";
+    if (!nome) {
+      var PARAR = " vence vencem vencimento venc vencendo dia amanha hoje conta contas pagar a de do da no na em todo todos os mes meses mensal lembrar lembre me agendar agende reais real um uma o e para pra que ";
+      var l = bruto.replace(/r\$\s*/ig, "").split(/\s+/).filter(function (w) { var k = sem(w).replace(/[^a-z0-9\/.,]/g, ""); return k && !/\d/.test(k) && PARAR.indexOf(" " + k + " ") < 0; }).join(" ");
+      nome = l ? cap(l.slice(0, 40)) : "Conta";
+    }
+    return { ok: true, nome: nome, valor: Math.round(valor * 100) / 100, venc: venc, cat: cat, repete: /(todo\s+mes|todos\s+os\s+meses|mensal|mensalmente)/.test(n) };
+  }
+  function catPorNome(n) { var b = null; CATS_D.forEach(function (k) { if (k !== "Outros" && kwRe(sem(k)).test(n) && (!b || k.length > b.length)) b = k; }); return b; }
+  function interpretarLimite(texto) {
+    var n = sem(texto); if (!RE_LIMITE.test(n)) return { ok: false };
+    var cat = catPorNome(n) || categoriaCitada(texto), valor = acharValor(n);
+    if (!cat) return { ok: false, erro: "sem-categoria" };
+    if (!isFinite(valor) || valor <= 0) return { ok: false, erro: "sem-valor", cat: cat };
+    return { ok: true, cat: cat, valor: Math.round(valor * 100) / 100 };
+  }
+
+  var api = { ehConta: ehConta, interpretarConta: interpretarConta, interpretarLimite: interpretarLimite, proxData: proxData, ehLimite: function (t) { return RE_LIMITE.test(sem(t)); },  interpretar: interpretar, dividir: dividir, categoriaCitada: categoriaCitada, sem: sem, CATS_D: CATS_D, CATS_R: CATS_R, FORMAS: FORMAS, BANCOS: BANCOS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.QuoxParser = api;
 })(typeof window !== "undefined" ? window : globalThis);
