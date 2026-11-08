@@ -65,3 +65,5 @@ a.card:hover{border-color:var(--accent)}
 .legal h2{font-size:1.1rem;margin:26px 0 6px}
 .legal p,.legal li{font-size:.97rem}
 .legal .meta{color:var(--muted);font-size:.88rem;margin:0 0 12px}
+
+.hero .hero-conta{margin:20px 0 0;font-size:.98rem}.hero .hero-conta .btn{padding:8px 16px;margin:0 8px 0 6px}.hero .hero-conta a:not(.btn){color:#5fd4e8}

@@ -32,7 +32,7 @@
     "</div></footer>";
   document.body.insertAdjacentHTML("afterbegin", head);
   document.body.insertAdjacentHTML("beforeend", foot);
-  try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k) && localStorage.getItem(k)) { var c = document.getElementById("sx-conta"); if (c) { c.textContent = "Minha conta"; c.href = "assessor.html"; } break; } } } catch (e) {}
+  try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k) && localStorage.getItem(k)) { var c = document.getElementById("sx-conta"); if (c) { c.textContent = "Minha conta"; c.href = "assessor.html";  var h = document.getElementById("hero-conta"); if (h) h.hidden = true; } break; } } } catch (e) {}
   var b = document.querySelector(".sx-burger"), n = document.getElementById("sx-nav");
   b.addEventListener("click", function () {
     var aberto = n.classList.toggle("sx-open");
