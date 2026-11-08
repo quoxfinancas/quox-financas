@@ -302,7 +302,7 @@ function mostrarSalvar(){$("sim-salvar").hidden=!(authOn&&authUser&&ultimaSim&&u
 function nomeOpcao(id){for(var i=0;i<O.length;i++)if(O[i].id===id)return O[i].n;return id}
 function listarSims(){
  if(!(authOn&&authUser)){$("minhas-sim").hidden=true;return}
- sb.from("simulacoes").select("id,criado_em,perfil,valor,prazo_meses,itens,medio").order("criado_em",{ascending:false}).limit(10).then(function(r){
+ sb.from("simulacoes").select("id,criado_em,perfil,valor,prazo_meses,itens,medio").order("criado_em",{ascending:false}).limit(4).then(function(r){
   var l=(r&&r.data)||[];$("minhas-sim").hidden=!l.length;
   $("sim-lista").innerHTML=l.map(function(x){var d=new Date(x.criado_em).toLocaleDateString("pt-BR");
    return '<div class="card"><div class="kv"><span><strong>'+d+" · "+(PN[x.perfil]||x.perfil)+"</strong></span><span>"+brl(+x.valor)+" em "+x.prazo_meses+" meses</span></div>"+
@@ -314,7 +314,11 @@ $("b-salvar-sim").addEventListener("click",function(){
  if(!(authOn&&authUser&&ultimaSim))return;var m=$("sim-msg");m.textContent="Salvando…";
  sb.from("simulacoes").insert({perfil:ultimaSim.perfil,valor:ultimaSim.valor,prazo_meses:ultimaSim.prazo_meses,itens:ultimaSim.itens,pior:ultimaSim.pior,medio:ultimaSim.medio,bom:ultimaSim.bom}).then(function(r){
   if(r&&r.error){m.textContent="Não foi possível salvar agora. Tente de novo.";return}
-  m.textContent="Simulação salva.";listarSims()},function(){m.textContent="Sem conexão. Tente de novo."})});
+  /* mantém só as 4 mais recentes: apaga as mais antigas */
+  sb.from("simulacoes").select("id").order("criado_em",{ascending:false}).then(function(q){
+   var ids=((q&&q.data)||[]).slice(4).map(function(x){return x.id});
+   var fim=function(){m.textContent="Simulação salva. Guardamos as 4 mais recentes; ao passar disso, a mais antiga é apagada.";listarSims()};
+   if(ids.length)sb.from("simulacoes").delete().in("id",ids).then(fim,fim);else fim()},function(){m.textContent="Simulação salva.";listarSims()})},function(){m.textContent="Sem conexão. Tente de novo."})});
 
 /* Escolha das opções */
 function sugerir(){st.sel=SUG[st.perfil].slice(0,st.n)}
@@ -393,7 +397,7 @@ fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(function(r){if(!r.ok)th
 
 /* ---------- Login com Supabase ---------- */
 var TELAS=["entrar","criar","confirmar","recuperar","novasenha","completar"];
-var HASHTELA=(function(){var h=(location.hash||"").slice(1);return h==="criar"||h==="recuperar"?h:""})();
+var HASHTELA=(function(){var h=(location.hash||"").slice(1);return h==="criar"||h==="recuperar"||h==="entrar"?h:""})();
 function base(){return location.origin+location.pathname.replace(/[^\/]*$/,"")}
 function tela(n){TELAS.forEach(function(t){$("a-"+t).hidden=t!==n});$("a-erro").textContent="";$("a-ok").textContent="";$("modal").hidden=true;$("auth").hidden=false}
 function erroAuth(e){var m=String((e&&e.message)||e||"").toLowerCase();

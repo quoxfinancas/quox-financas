@@ -16,6 +16,7 @@
     return '<a href="' + x[1] + '"' + (atual ? ' aria-current="page"' : "") + ">" + x[2] + "</a>";
   }
   var nav = itens.map(link).join("") +
+    '<a class="sx-conta" id="sx-conta" href="simulador.html#entrar">Entrar / Criar conta</a>' +
     '<details class="sx-more"><summary>Institucional ▾</summary><div class="sx-drop">' + legais.map(link).join("") + "</div></details>" +
     '<div class="sx-sec sx-extra">Institucional</div><div class="sx-extra">' + legais.map(link).join("") + "</div>";
   var head =
@@ -31,6 +32,7 @@
     "</div></footer>";
   document.body.insertAdjacentHTML("afterbegin", head);
   document.body.insertAdjacentHTML("beforeend", foot);
+  try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k) && localStorage.getItem(k)) { var c = document.getElementById("sx-conta"); if (c) { c.textContent = "Minha conta"; c.href = "assessor.html"; } break; } } } catch (e) {}
   var b = document.querySelector(".sx-burger"), n = document.getElementById("sx-nav");
   b.addEventListener("click", function () {
     var aberto = n.classList.toggle("sx-open");

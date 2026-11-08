@@ -32,3 +32,5 @@
 .sx-foot .sx-legal{font-size:.82rem;color:#8fb3bd}
 @media print{.sx-head,.sx-foot{display:none!important}}
 body[data-page=assessor].sx-app .sx-head,body[data-page=assessor].sx-app .sx-foot{display:none}
+
+.sx-nav a.sx-conta{background:#5fd4e8;color:#06222b;font-weight:700}.sx-nav a.sx-conta:hover{background:#8be4f2;color:#06222b}
