@@ -7,8 +7,8 @@
   var sb = null, user = null, snap = { lanc: {}, div: {}, chat: "[]", extra: "" }, outbox = [], enviando = false, descartadas = 0, legadoDados = null;
   var PA = window.QuoxParser;
   var CATS_D = PA.CATS_D, CATS_R = PA.CATS_R, FORMAS = PA.FORMAS, BANCOS = PA.BANCOS;
-  var TABS = ["chat", "resumo", "categorias", "extrato", "planejar", "cartoes", "mais", "metas", "importar", "familia", "dividas", "relatorio", "lancar"];
-  var MAIS = ["categorias", "dividas", "metas", "importar", "familia"];
+  var TABS = ["chat", "resumo", "categorias", "extrato", "planejar", "cartoes", "mais", "metas", "importar", "familia", "dividas", "desafios", "relatorio", "lancar"];
+  var MAIS = ["categorias", "dividas", "desafios", "metas", "importar", "familia"];
   window.QuoxTabs = window.QuoxTabs || {};
   var MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
   var $ = function (id) { return document.getElementById(id); };
@@ -52,7 +52,7 @@
   }
 
   /* ---------- armazenamento ---------- */
-  function vazio() { return { v: 1, lanc: [], dividas: [], chat: [], orc: {}, rec: [], contas: [], cartoes: [], metas: [] }; }
+  function vazio() { return { v: 1, lanc: [], dividas: [], chat: [], orc: {}, rec: [], contas: [], cartoes: [], metas: [], desafios: [] }; }
   function limpar(o) {
     var r = vazio();
     if (!o || typeof o !== "object") return r;
@@ -91,6 +91,14 @@
       if (!x) return; var al = +x.alvo, g = +x.guardado || 0; if (!isFinite(al) || al <= 0 || al > 1e12 || !isFinite(g) || g < 0) return;
       r.metas.push({ id: String(x.id || uid()).slice(0, 14), nome: String(x.nome || "Meta").slice(0, 40), alvo: Math.round(al * 100) / 100, guardado: Math.round(g * 100) / 100, prazo: dataValida(String(x.prazo)) ? x.prazo : "",
         hist: (Array.isArray(x.hist) ? x.hist : []).filter(function (h) { return h && dataValida(String(h.d)) && isFinite(+h.v); }).slice(-30).map(function (h) { return { d: h.d, v: Math.round(+h.v * 100) / 100 }; }) });
+    });
+    (Array.isArray(o.desafios) ? o.desafios : []).slice(0, 40).forEach(function (x) {
+      if (!x || ["sem", "teto", "anotar"].indexOf(x.tipo) < 0 || !dataValida(String(x.ini))) return;
+      var dias = Math.round(+x.dias), alvo = +x.alvo || 0;
+      if (!(dias >= 1 && dias <= 90)) return;
+      if (x.tipo !== "anotar" && CATS_D.indexOf(x.cat) < 0) return;
+      if (x.tipo === "teto" && !(alvo > 0 && alvo < 1e9)) return;
+      r.desafios.push({ id: String(x.id || uid()).slice(0, 14), tipo: x.tipo, cat: x.tipo === "anotar" ? "" : x.cat, alvo: x.tipo === "teto" ? Math.round(alvo * 100) / 100 : 0, dias: dias, ini: x.ini, visto: x.visto === 1 ? 1 : 0 });
     });
     return r;
   }
@@ -156,6 +164,16 @@
       estado.dividas.forEach(function (d) { jur += d.saldo * d.juros / 100; if (!pior || d.juros > pior.juros) pior = d; });
       add(jur > 0 ? "atencao" : "info", "Suas dívidas cadastradas geram cerca de " + R(jur) + " de juros por mês. A mais cara é " + pior.nome + ", com " + pct(pior.juros) + " ao mês.");
     }
+    if (t.n && !estado.metas.some(function (m) { return /reserva|emerg/i.test(m.nome); }) && t.rec > 0 && t.saldo >= 0)
+      add("info", "Você ainda não tem uma meta de reserva de emergência. Ela evita que um imprevisto vire dívida; crie uma na aba Metas, com a sugestão automática.");
+    o.forEach(function (i) {
+      var x = i.t;
+      i.a = /dívidas|juros por mês|Cartão e dívidas/.test(x) ? ["artigo-como-sair-das-dividas.html", "Como sair das dívidas: um plano em 7 passos"]
+        : /cartão de crédito/.test(x) ? ["artigo-cartao-de-credito.html", "Cartão de crédito sem armadilhas"]
+        : /reserva de emergência/.test(x) && !/Excelente/.test(x) ? ["artigo-reserva-de-emergencia.html", "Reserva de emergência: quanto guardar"]
+        : /Excelente|aplicações/.test(x) ? ["artigo-como-comecar-a-investir.html", "Como começar a investir com pouco dinheiro"]
+        : /a mais do que recebeu|guardou só|nenhuma receita|moradia|concentra|assinaturas|Lazer, compras/.test(x) ? ["artigo-orcamento-simples.html", "Orçamento que funciona, sem planilha complicada"] : null;
+    });
     var ordem = { alerta: 0, atencao: 1, ok: 2, bom: 2, info: 3 };
     o.sort(function (a, b) { return ordem[a.n] - ordem[b.n]; });
     return o;
@@ -209,7 +227,7 @@
     else if (tabAtual === "lancar") renderLancar();
   }
   function dicasHtml(lista, max) {
-    return lista.slice(0, max || 99).map(function (i) { return '<div class="dica ' + i.n + '">' + esc(i.t) + "</div>"; }).join("");
+    return lista.slice(0, max || 99).map(function (i) { return '<div class="dica ' + i.n + '">' + esc(i.t) + (i.a ? ' <a class="dica-link" href="' + i.a[0] + '">Ler: ' + esc(i.a[1]) + " &rsaquo;</a>" : "") + "</div>"; }).join("");
   }
   function barrasHtml(t) {
     var cs = catsOrdenadas(t);
@@ -225,6 +243,7 @@
     var s = $("k-saldo"); s.textContent = R(t.saldo); s.className = t.saldo < 0 ? "neg" : t.saldo > 0 ? "pos" : "";
     $("k-taxa").textContent = t.taxa == null ? "–" : pct(t.taxa);
     $("dicas").innerHTML = dicasHtml(insights(mes), 3) + '<p class="leg">Dicas automáticas, baseadas nos seus lançamentos. Veja todas na aba Relatório.</p>';
+    if (window.QuoxTabs.semana) window.QuoxTabs.semana();
     $("barras").innerHTML = barrasHtml(t);
     var ob = orcBarras(false); $("orc-painel").hidden = !ob; $("orc-resumo").innerHTML = ob;
     var ps = pagsOrdenadas(t);
@@ -459,17 +478,28 @@
     else {
       var tot = ds.reduce(function (s, x) { return s + x.saldo; }, 0), jur = ds.reduce(function (s, x) { return s + x.saldo * x.juros / 100; }, 0);
       $("d-lista").innerHTML = '<p class="sub">Total devido: <strong>' + R(tot) + "</strong> · juros por mês: <strong>" + R(jur) + "</strong></p>" + ds.map(function (d) {
-        return '<div class="item"><div class="l"><b>' + esc(d.nome) + "</b><small>" + pct(d.juros) + " ao mês · parcela mínima " + R(d.parcela) + '</small><div class="acs"><button class="mini-b" data-ded="' + esc(d.id) + '" type="button">Editar</button><button class="mini-b perigo" data-ddel="' + esc(d.id) + '" type="button">Excluir</button></div></div><div class="v neg">' + R(d.saldo) + "</div></div>";
+        return '<div class="item"><div class="l"><b>' + esc(d.nome) + "</b><small>" + pct(d.juros) + " ao mês · parcela mínima " + R(d.parcela) + '</small><div class="acs"><button class="mini-b" data-ded="' + esc(d.id) + '" type="button">Editar</button><button class="mini-b perigo" data-ddel="' + esc(d.id) + '" type="button">Excluir</button></div></div><div class="v ' + (d.saldo > 0 ? "neg" : "pos") + '">' + (d.saldo > 0 ? R(d.saldo) : "Quitada ✓") + "</div></div>" + (d.saldo > 0 ? '<div class="pagar-d"><input data-dpv="' + esc(d.id) + '" inputmode="decimal" autocomplete="off" placeholder="Valor pago (R$)" aria-label="Valor pago em ' + esc(d.nome) + '"><button class="mini-b" data-dpay="' + esc(d.id) + '" type="button">Registrar pagamento</button></div>' : "");
       }).join("");
+      $("d-lista").querySelectorAll("[data-dpay]").forEach(function (b) { b.addEventListener("click", function () { pagarDivida(b.getAttribute("data-dpay")); }); });
       $("d-lista").querySelectorAll("[data-ded]").forEach(function (b) { b.addEventListener("click", function () { editarDivida(b.getAttribute("data-ded")); }); });
       $("d-lista").querySelectorAll("[data-ddel]").forEach(function (b) { duplo(b, "Confirmar?", function () { estado.dividas = estado.dividas.filter(function (x) { return x.id !== b.getAttribute("data-ddel"); }); salvar(); render(); }); });
     }
     $("d-plano").hidden = !ds.length;
     if (ds.length) renderPlano();
   }
+  function pagarDivida(id) {
+    var d = estado.dividas.filter(function (x) { return x.id === id; })[0], inp = document.querySelector('[data-dpv="' + id + '"]'); if (!d || !inp) return;
+    var v = parseBR(inp.value); if (!isFinite(v) || v <= 0) { toast("Informe o valor que você pagou."); return; }
+    v = Math.min(Math.round(v * 100) / 100, d.saldo);
+    d.saldo = Math.round((d.saldo - v) * 100) / 100;
+    estado.lanc.push({ id: uid(), tipo: "despesa", valor: v, cat: "Cartão e dívidas", data: hoje(), desc: ("Pagamento: " + d.nome).slice(0, 80), forma: "", banco: "" });
+    salvar(); toast(d.saldo <= 0 ? "Dívida quitada! Parabéns, um passo enorme." : "Pagamento registrado. Falta " + R(d.saldo) + ".");
+    render();
+  }
   function renderPlano() {
     var extra = parseBR($("p-extra").value); if (!isFinite(extra) || extra < 0) extra = 0;
-    var est = $("p-met").value, ds = estado.dividas;
+    var est = $("p-met").value, ds = estado.dividas.filter(function (x) { return x.saldo > 0; });
+    if (!ds.length) { $("p-res").innerHTML = '<div class="dica bom">Todas as suas dívidas cadastradas estão quitadas. 🎉</div>'; return; }
     var base = simular(ds, 0, est), com = simular(ds, extra, est);
     var h = "";
     if (!base.quitou && !com.quitou) h += '<div class="dica alerta">Com esses valores a dívida não é quitada: as parcelas não cobrem os juros. Aumente o dinheiro extra, renegocie as taxas ou procure trocar por uma dívida mais barata.</div>';
@@ -481,6 +511,8 @@
       var alvo = com.quitou ? com : base;
       if (alvo.ordem.length) h += '<p class="sub" style="margin-top:10px">Ordem de quitação' + (extra > 0 && com.quitou ? " (com o extra)" : "") + ":</p><ol>" + alvo.ordem.map(function (o) { return "<li>" + esc(o.nome) + " — em " + tempo(o.mes) + "</li>"; }).join("") + "</ol>";
     }
+    var av = simular(ds, extra, "av"), bn = simular(ds, extra, "bn");
+    if (av.quitou && bn.quitou && ds.length > 1) h += '<div class="resultado"><p class="sub"><strong>Comparando os métodos' + (extra > 0 ? " (com " + R(extra) + " extras)" : "") + ':</strong></p><p>Avalanche: ' + tempo(av.meses) + ", " + R(av.juros) + ' de juros.<br>Bola de neve: ' + tempo(bn.meses) + ", " + R(bn.juros) + " de juros.</p><p>" + (Math.abs(av.juros - bn.juros) < 1 ? "Os dois dão praticamente o mesmo resultado; escolha o que mais motiva você." : av.juros < bn.juros ? "A avalanche economiza " + R(bn.juros - av.juros) + ", mas a bola de neve quita a primeira dívida mais cedo e ajuda a manter a motivação." : "Na sua situação, a bola de neve é igual ou melhor.") + "</p></div>";
     h += '<p class="leg">Projeção simples: considera juros fixos e que você paga o mesmo orçamento todo mês, passando para as próximas dívidas as parcelas que forem sendo quitadas. Não inclui multas nem tarifas.</p>';
     $("p-res").innerHTML = h;
   }
@@ -647,7 +679,7 @@
     catch (x) { $("erro-salvar").hidden = false; }
   }
   function snapshotDe(e) {
-    var s = { lanc: {}, div: {}, chat: JSON.stringify(e.chat), extra: JSON.stringify([e.orc, e.rec, e.contas, e.cartoes, e.metas]) };
+    var s = { lanc: {}, div: {}, chat: JSON.stringify(e.chat), extra: JSON.stringify([e.orc, e.rec, e.contas, e.cartoes, e.metas, e.desafios]) };
     e.lanc.forEach(function (l) { s.lanc[l.id] = JSON.stringify(l); });
     e.dividas.forEach(function (d) { s.div[d.id] = JSON.stringify(d); });
     return s;
@@ -676,7 +708,7 @@
   }
   function requisicao(lote) {
     var op = lote[0], tabela = op.k === "lanc" ? "lancamentos" : op.k === "div" ? "dividas" : op.k === "extra" ? "assessor_extra" : "assessor_chat";
-    if (op.k === "extra") return sb.from(tabela).upsert({ user_id: user.id, dados: { orc: estado.orc, rec: estado.rec, contas: estado.contas, cartoes: estado.cartoes, metas: estado.metas }, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
+    if (op.k === "extra") return sb.from(tabela).upsert({ user_id: user.id, dados: { orc: estado.orc, rec: estado.rec, contas: estado.contas, cartoes: estado.cartoes, metas: estado.metas, desafios: estado.desafios }, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
     if (op.k === "chat") return sb.from(tabela).upsert({ user_id: user.id, msgs: estado.chat, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
     if (op.a === "del") return sb.from(tabela).delete().in("id", lote.map(function (o) { return o.id; }));
     return sb.from(tabela).upsert(lote.map(function (o) { return o.row; }), { onConflict: "user_id,id" });
@@ -729,10 +761,10 @@
         lanc: v[0].map(function (r) { return { id: r.id, tipo: r.tipo, valor: +r.valor, cat: r.cat, data: r.data, desc: r.descr, forma: r.forma, banco: r.banco }; }),
         dividas: v[1].map(function (r) { return { id: r.id, nome: r.nome, saldo: +r.saldo, juros: +r.juros, parcela: +r.parcela }; }),
         chat: chat,
-        orc: ex ? ex.orc : estado.orc, rec: ex ? ex.rec : estado.rec, contas: ex ? ex.contas : estado.contas, cartoes: ex ? ex.cartoes : estado.cartoes, metas: ex ? ex.metas : estado.metas
+        orc: ex ? ex.orc : estado.orc, rec: ex ? ex.rec : estado.rec, contas: ex ? ex.contas : estado.contas, cartoes: ex ? ex.cartoes : estado.cartoes, metas: ex ? ex.metas : estado.metas, desafios: ex ? ex.desafios : estado.desafios
       });
       snap = snapshotDe(estado);
-      if (!ex && (Object.keys(estado.orc).length || estado.rec.length || estado.contas.length || estado.cartoes.length || estado.metas.length)) enfileirar({ k: "extra", a: "up", id: "extra" });
+      if (!ex && (Object.keys(estado.orc).length || estado.rec.length || estado.contas.length || estado.cartoes.length || estado.metas.length || estado.desafios.length)) enfileirar({ k: "extra", a: "up", id: "extra" });
       gerarRecorrentes(); guardarCache(); statusSync(); render(); descarregar();
     }).catch(function () { statusSync(); });
   }
@@ -1106,7 +1138,7 @@
     estado: function () { return estado; }, salvar: salvar, render: render, setTab: setTab, mes: function () { return mes; },
     user: function () { return user; }, sb: function () { return sb; }, nuvem: nuvem, enviarChat: enviarChat, pushChat: pushChat,
     R: R, pct: pct, esc: esc, uid: uid, hoje: hoje, addMes: addMes, mesLabel: mesLabel, parseBR: parseBR, toast: toast, duplo: duplo,
-    itemLanc: itemLanc, ligarAcoes: ligarAcoes, dataValida: dataValida, catsOrdenadas: catsOrdenadas, totais: totais, corCat: corCat,
+    insights: insights, itemLanc: itemLanc, ligarAcoes: ligarAcoes, dataValida: dataValida, catsOrdenadas: catsOrdenadas, totais: totais, corCat: corCat,
     chat: (window.QuoxApp && window.QuoxApp.chat) || [], avisosExtra: window.QuoxApp && window.QuoxApp.avisosExtra
   });
   if (nuvem) iniciarNuvem(); else { document.body.classList.add("ap-ok"); iniciarUI(); }

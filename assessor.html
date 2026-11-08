@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Assessor financeiro | QUOX - Finanças</title>
 <meta name="description" content="Lance seus gastos e receitas, veja o relatório do mês, receba dicas e monte um plano para sair das dívidas. Gratuito e pode ser instalado no celular.">
-<meta name="theme-color" content="#081a21">
+<meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest-assessor.webmanifest">
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -85,6 +85,7 @@
       <div class="kpi"><span>Saldo</span><b id="k-saldo"></b></div>
       <div class="kpi"><span>Poupado</span><b id="k-taxa"></b></div>
     </div>
+    <div class="painel" id="sem-painel"><h2>Sua semana</h2><div id="sem-res"></div></div>
     <div class="painel"><h2>Dicas do assessor</h2><div id="dicas"></div></div>
     <div class="painel" id="orc-painel" hidden><h2>Limites por categoria</h2><div id="orc-resumo"></div></div>
     <div class="painel"><h2>Para onde foi o dinheiro</h2><div id="barras"></div></div>
@@ -187,6 +188,7 @@
       <div class="menu-mais">
         <button type="button" data-ir="categorias"><b>Categorias</b><small>Veja os gastos agrupados por categoria</small></button>
         <button type="button" data-ir="dividas"><b>Dívidas</b><small>Cadastre e monte um plano para quitar</small></button>
+        <button type="button" data-ir="desafios"><b>Desafios</b><small>Metas curtas com progresso automático</small></button>
         <button type="button" data-ir="metas"><b>Metas e caixinhas</b><small>Reserva de emergência, viagem, objetivos</small></button>
         <button type="button" data-ir="importar"><b>Importar extrato</b><small>Traga lançamentos do seu banco (OFX ou CSV)</small></button>
         <button type="button" data-ir="familia"><b>Conta compartilhada</b><small>Casal ou família no mesmo controle</small></button>
@@ -277,6 +279,29 @@
   </section>
 
   <!-- RELATÓRIO -->
+  <section class="tab" id="t-desafios" hidden>
+    <div class="painel">
+      <h2>Desafios</h2>
+      <p class="sub">Escolha um desafio curto. O assessor acompanha sozinho com os seus lançamentos e avisa quando você vence ou escorrega.</p>
+      <div id="ds-lista"></div>
+    </div>
+    <div class="painel">
+      <h2>Novo desafio</h2>
+      <form id="ds-form" novalidate>
+        <label>Tipo<select id="ds-tipo">
+          <option value="sem">Ficar sem gastar com uma categoria</option>
+          <option value="teto">Gastar no máximo um valor em uma categoria</option>
+          <option value="anotar">Anotar meus gastos todos os dias</option>
+        </select></label>
+        <label id="ds-cat-l">Categoria<select id="ds-cat"></select></label>
+        <label id="ds-alvo-l" hidden>Valor máximo (R$)<input id="ds-alvo" inputmode="decimal" autocomplete="off" placeholder="Ex.: 200"></label>
+        <label>Duração<select id="ds-dias"><option value="7">7 dias</option><option value="14">14 dias</option><option value="30">30 dias</option></select></label>
+        <p class="erro-t" id="ds-erro" role="alert"></p>
+        <button class="btn" type="submit">Começar desafio</button>
+      </form>
+    </div>
+  </section>
+
   <section class="tab" id="t-relatorio" hidden>
     <div class="painel" id="rel"></div>
     <div class="painel" id="ia-box" hidden>
@@ -319,6 +344,7 @@
 <script src="assessor-xlsx.js"></script>
 <script src="assessor.js"></script>
 <script src="assessor-extras.js"></script>
+<script src="assessor-fase3.js"></script>
 <script src="site.js"></script>
 </body>
 </html>

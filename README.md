@@ -139,3 +139,12 @@ A aba **Planejar** reúne contas a pagar (com aviso no topo do app), limites por
 - **Parcelas:** no chat, escreva "comprei tênis 300 em 3x no cartão Nubank" ou "geladeira 3x de 100 no Itaú". No formulário use o campo *Parcelas*. Cada parcela vira um lançamento no mês certo (e na fatura certa do cartão); a última absorve os centavos. "Excluir todas as parcelas" e "desfazer" removem a compra inteira.
 - **Excel (.xlsx):** aba Relatório → "Baixar Excel". Gera 4 abas (Lançamentos, Resumo mensal, Por categoria, Parcelas futuras) com fórmulas. Arquivo `assessor-xlsx.js`, sem bibliotecas externas.
 - Não há SQL novo. Cache do app: `quox-v7`.
+
+## Fase 3 e paleta clara
+
+- **Paleta:** azul claro (fundo #f4fafd, cabeçalho e rodapé claros, destaque #0b7a94). O tema escuro automático foi removido, e o simulador (que era roxo) agora usa o mesmo azul.
+- **Dicas ligadas ao blog:** cada dica do Resumo pode trazer um link para o artigo relacionado. Comando de chat: "dicas".
+- **Plano de dívidas:** compara avalanche e bola de neve; "Registrar pagamento" reduz o saldo e lança a despesa em "Cartão e dívidas".
+- **Desafios** (aba em Mais): "N dias sem gastar com categoria", "teto de gasto em categoria" e "anotar todos os dias"; progresso automático. Chat: "desafios".
+- **Resumo semanal:** card "Sua semana" no Resumo, com botão de compartilhar. Chat: "resumo da semana".
+- Sem SQL novo (desafios ficam em `assessor_extra`). Cache: `quox-v9`. Arquivo novo: `assessor-fase3.js`.

@@ -139,11 +139,53 @@
   var RE_PARC = /^p([a-z0-9]{4,12})_(\d{1,2})_(\d{1,2})$/;
   function infoParcela(id) { var m = RE_PARC.exec(String(id || "")); return m ? { g: m[1], k: +m[2], n: +m[3] } : null; }
 
+
+  /* ---------- fase 3: desafios e resumo semanal ---------- */
+  function addDias(iso, n) { var p = iso.split("-"); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n)).toISOString().slice(0, 10); }
+  function diasEntre2(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 864e5); }
+  /* d: {tipo:"sem"|"teto"|"anotar", cat, alvo, dias, ini}. st: andamento | ganho | perdido */
+  function progressoDesafio(d, lanc, hoje) {
+    var fim = addDias(d.ini, d.dias - 1), dec = Math.max(0, Math.min(d.dias, diasEntre2(d.ini, hoje) + 1)), acabou = hoje > fim;
+    var dentro = lanc.filter(function (l) { return l.data >= d.ini && l.data <= fim && l.data <= hoje; });
+    var rest = Math.max(0, d.dias - dec), base = { dec: dec, dias: d.dias, restam: rest, fim: fim };
+    function out(st, pct, ex) { var o = { st: st, pct: Math.max(0, Math.min(100, pct)) }, k; for (k in base) o[k] = base[k]; for (k in ex || {}) o[k] = ex[k]; return o; }
+    if (dec === 0) return out("andamento", 0, { naoComecou: true });
+    if (d.tipo === "sem") {
+      var g = dentro.filter(function (l) { return l.tipo === "despesa" && l.cat === d.cat; });
+      if (g.length) return out("perdido", dec / d.dias * 100, { quando: g[0].data });
+      return out(acabou ? "ganho" : "andamento", acabou ? 100 : dec / d.dias * 100);
+    }
+    if (d.tipo === "teto") {
+      var s = 0; dentro.forEach(function (l) { if (l.tipo === "despesa" && l.cat === d.cat) s += l.valor; }); s = Math.round(s * 100) / 100;
+      if (s > d.alvo) return out("perdido", 100, { gasto: s });
+      return out(acabou ? "ganho" : "andamento", s / d.alvo * 100, { gasto: s });
+    }
+    var tem = {}, feitos = 0, k2, perdeu = false;
+    dentro.forEach(function (l) { tem[l.data] = 1; });
+    for (k2 = 0; k2 < dec; k2++) { var dia = addDias(d.ini, k2); if (tem[dia]) feitos++; else if (dia < hoje) perdeu = true; }
+    if (perdeu) return out("perdido", feitos / d.dias * 100, { feitos: feitos });
+    return out(acabou ? "ganho" : "andamento", feitos / d.dias * 100, { feitos: feitos });
+  }
+  /* últimos 7 dias (incluindo hoje) contra os 7 anteriores */
+  function resumoSemana(lanc, hoje) {
+    var i0 = addDias(hoje, -6), p0 = addDias(hoje, -13), p1 = addDias(hoje, -7);
+    var r = { rec: 0, desp: 0, recAnt: 0, despAnt: 0, n: 0, dias: 0, top: null, ini: i0, fim: hoje }, cat = {}, dd = {};
+    lanc.forEach(function (l) {
+      if (l.data >= i0 && l.data <= hoje) { r.n++; dd[l.data] = 1; if (l.tipo === "receita") r.rec += l.valor; else { r.desp += l.valor; cat[l.cat] = (cat[l.cat] || 0) + l.valor; } }
+      else if (l.data >= p0 && l.data <= p1) { if (l.tipo === "receita") r.recAnt += l.valor; else r.despAnt += l.valor; }
+    });
+    r.dias = Object.keys(dd).length;
+    ["rec", "desp", "recAnt", "despAnt"].forEach(function (k) { r[k] = Math.round(r[k] * 100) / 100; });
+    Object.keys(cat).forEach(function (c) { if (!r.top || cat[c] > r.top[1]) r.top = [c, Math.round(cat[c] * 100) / 100]; });
+    r.delta = r.despAnt > 0 ? (r.desp - r.despAnt) / r.despAnt * 100 : null;
+    return r;
+  }
+
   /* ---------- metas ---------- */
   function mesesAte(hojeIso, prazo) { var a = +hojeIso.slice(0, 4) * 12 + +hojeIso.slice(5, 7), b = +prazo.slice(0, 4) * 12 + +prazo.slice(5, 7); return Math.max(1, b - a); }
   function porMes(meta, hojeIso) { var falta = meta.alvo - meta.guardado; if (falta <= 0 || !meta.prazo || meta.prazo <= hojeIso) return null; return Math.ceil((falta / mesesAte(hojeIso, meta.prazo)) * 100) / 100; }
 
-  var api = { parcelar: parcelar, dataMaisMeses: dataMaisMeses, infoParcela: infoParcela, numero: numero, data: data, lerOFX: lerOFX, lerCSV: lerCSV, lerExtrato: lerExtrato, idImport: idImport, faturas: faturas, faturaDaCompra: faturaDaCompra, limiteUsado: limiteUsado, mesmoCartao: mesmoCartao, mesDia: mesDia, somaMes: somaMes, porMes: porMes, sem: sem };
+  var api = { addDias: addDias, progressoDesafio: progressoDesafio, resumoSemana: resumoSemana, parcelar: parcelar, dataMaisMeses: dataMaisMeses, infoParcela: infoParcela, numero: numero, data: data, lerOFX: lerOFX, lerCSV: lerCSV, lerExtrato: lerExtrato, idImport: idImport, faturas: faturas, faturaDaCompra: faturaDaCompra, limiteUsado: limiteUsado, mesmoCartao: mesmoCartao, mesDia: mesDia, somaMes: somaMes, porMes: porMes, sem: sem };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.QuoxLib = api;
 })(typeof window !== "undefined" ? window : globalThis);
