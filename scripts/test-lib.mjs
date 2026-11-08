@@ -55,4 +55,23 @@ const par = L.parcelar(300, 3, "2026-11-15", false).map(p => ({ tipo: "despesa",
 const fp = L.faturas({ nome: "Nubank", fecha: 10, vence: 17, pagas: [] }, par, "2026-11-20");
 eq(fp.map(f => [f.ym, f.total]), [["2026-12", 100], ["2027-01", 100], ["2027-02", 100]], "parcelas em faturas diferentes");
 eq(L.limiteUsado(fp), 300, "limite compromete o total da compra");
+// desafios e resumo semanal
+const dl = (data, cat, valor, tipo = "despesa") => ({ tipo, cat, valor, data });
+eq(L.addDias("2026-02-27", 3), "2026-03-02", "addDias");
+let pd = L.progressoDesafio({ tipo: "sem", cat: "Lazer", dias: 7, ini: "2026-11-01" }, [dl("2026-11-02", "Mercado", 10)], "2026-11-03");
+eq([pd.st, pd.dec, Math.round(pd.pct)], ["andamento", 3, 43], "sem: andamento");
+eq(L.progressoDesafio({ tipo: "sem", cat: "Lazer", dias: 7, ini: "2026-11-01" }, [dl("2026-11-02", "Lazer", 10)], "2026-11-03").st, "perdido", "sem: perdido");
+eq(L.progressoDesafio({ tipo: "sem", cat: "Lazer", dias: 7, ini: "2026-11-01" }, [], "2026-11-08").st, "ganho", "sem: ganho");
+pd = L.progressoDesafio({ tipo: "teto", cat: "Lazer", alvo: 100, dias: 30, ini: "2026-11-01" }, [dl("2026-11-02", "Lazer", 60), dl("2026-11-04", "Lazer", 30)], "2026-11-10");
+eq([pd.st, pd.gasto, Math.round(pd.pct)], ["andamento", 90, 90], "teto andamento");
+eq(L.progressoDesafio({ tipo: "teto", cat: "Lazer", alvo: 100, dias: 30, ini: "2026-11-01" }, [dl("2026-11-02", "Lazer", 160)], "2026-11-10").st, "perdido", "teto estourado");
+eq(L.progressoDesafio({ tipo: "teto", cat: "Lazer", alvo: 100, dias: 7, ini: "2026-11-01" }, [dl("2026-11-02", "Lazer", 60)], "2026-11-09").st, "ganho", "teto ganho");
+pd = L.progressoDesafio({ tipo: "anotar", dias: 3, ini: "2026-11-01" }, [dl("2026-11-01", "X", 1), dl("2026-11-02", "X", 1)], "2026-11-03");
+eq([pd.st, pd.feitos], ["andamento", 2], "anotar andamento (hoje ainda aberto)");
+eq(L.progressoDesafio({ tipo: "anotar", dias: 3, ini: "2026-11-01" }, [dl("2026-11-01", "X", 1), dl("2026-11-03", "X", 1)], "2026-11-03").st, "perdido", "anotar: dia sem lançamento");
+eq(L.progressoDesafio({ tipo: "anotar", dias: 3, ini: "2026-11-01" }, [dl("2026-11-01", "X", 1), dl("2026-11-02", "X", 1), dl("2026-11-03", "X", 1)], "2026-11-04").st, "ganho", "anotar ganho");
+eq(L.progressoDesafio({ tipo: "sem", cat: "Lazer", dias: 7, ini: "2026-11-10" }, [], "2026-11-08").naoComecou, true, "ainda não começou");
+const rs = L.resumoSemana([dl("2026-11-08", "Lazer", 50), dl("2026-11-05", "Mercado", 100), dl("2026-11-03", "Salário", 1000, "receita"), dl("2026-11-01", "Mercado", 100), dl("2026-10-25", "Mercado", 400)], "2026-11-08");
+eq([rs.desp, rs.rec, rs.despAnt, rs.n, rs.dias, rs.top], [150, 1000, 100, 3, 3, ["Mercado", 100]], "resumo semana");
+eq(Math.round(rs.delta), 50, "delta de despesas");
 console.log(f ? f + " falha(s)" : "Lib: todos os testes passaram."); process.exit(f ? 1 : 0);
