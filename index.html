@@ -20,13 +20,13 @@
 <body data-page="home">
 <script>
 /* Volta do login (Google, confirmação de e-mail, troca de senha): o Supabase devolve para o início; aqui a gente leva para o simulador, que conclui o login. */
-
+(function(){var h=location.hash||"";if(/access_token=|type=recovery|type=signup|error_description=|error_code=/.test(h)||/[?&]code=/.test(location.search)){location.replace("conta.html"+location.search+h)}})();
 </script>
 <section class="hero"><div class="wrap">
 <h1>Dinheiro organizado, dívidas sob controle e um futuro mais seguro</h1>
 <p>Artigos em português simples sobre como sair das dívidas, proteger a sua renda e fazer o dinheiro render, com ferramentas gratuitas para você colocar em prática.</p>
 <div class="acoes"><a class="btn" href="artigos.html">Ler os artigos</a><a class="btn sec" href="assessor.html">Controlar meus gastos</a></div>
-<div class="conta-box" id="conta-box"><p class="hero-conta">Um cadastro grátis libera o simulador e o assessor, com seus dados salvos em qualquer aparelho. <a class="btn" href="simulador.html#criar">Criar conta</a> <a href="simulador.html#entrar">Já tenho conta: entrar</a></p></div>
+
 </div></section>
 <main class="wrap">
 <h2 class="sec-t">Ferramentas</h2>
@@ -46,9 +46,6 @@
 
 <div class="aviso" style="margin-top:30px"><strong>Aviso:</strong> o conteúdo e as ferramentas são educativos. Não constituem consultoria, recomendação nem oferta de investimento, seguro ou crédito.</div>
 </main>
-<script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="conta.js"></script>
 <script src="site.js"></script>
 </body>
 </html>
