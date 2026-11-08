@@ -189,6 +189,12 @@ button.btn{font:inherit;font-weight:700;padding:11px 16px;border-radius:8px;bord
 
   <section id="res"></section>
 
+  <section class="panel" id="sim-salvar" hidden>
+    <button class="btn" id="b-salvar-sim" type="button">Salvar esta simulação na minha conta</button>
+    <p class="note" id="sim-msg" role="status"></p>
+  </section>
+  <section class="panel" id="minhas-sim" hidden><h3 style="margin:0 0 8px">Minhas simulações salvas</h3><div id="sim-lista"></div></section>
+
   <section class="panel" id="ofertas" hidden></section>
 
   <details class="panel" id="taxas">
@@ -263,12 +269,14 @@ function weights(){
  return sel.map(function(o,i){return{o:o,w:raw[i]/sum}})}
 function alloc(){var v=Math.max(0,parseFloat($("valor").value)||0),m=Math.max(1,parseInt($("prazo").value)||1);
  return{v:v,m:m,items:weights().map(function(x){return{o:x.o,w:x.w,a:v*x.w}})}}
+var ultimaSim=null;
 function render(){
- var A=alloc(),v=A.v,m=A.m,col={baixo:"var(--lo)",moderado:"var(--mo)",alto:"var(--hi)"};
+ ultimaSim=null;var A=alloc(),v=A.v,m=A.m,col={baixo:"var(--lo)",moderado:"var(--mo)",alto:"var(--hi)"};
  if(!A.items.length){$("res").innerHTML='<p class="note">Escolha pelo menos uma opção para simular.</p>';return}
  if(v<=0){$("res").innerHTML='<p class="note">Informe um valor maior que zero para simular.</p>';return}
  var tot={baixo:0,moderado:0,alto:0},T={p:0,c:0,o:0};
  A.items.forEach(function(x){tot[x.o.r]+=x.w;var p=proj(x.o,x.a,m);x.p=p;if(p){T.p+=p.net;T.c+=p.net;T.o+=p.net}else{x.s=scen(x.o,x.a,m);T.p+=x.s[0].net;T.c+=x.s[1].net;T.o+=x.s[2].net}});
+ ultimaSim={perfil:st.perfil,valor:v,prazo_meses:m,itens:A.items.map(function(x){return{id:x.o.id,peso:Math.round(x.w*1000)/1000}}),pior:Math.round(T.p*100)/100,medio:Math.round(T.c*100)/100,bom:Math.round(T.o*100)/100};
  var h="",fora=["baixo","moderado","alto"].some(function(k){return Math.abs(tot[k]-PB[st.perfil][k])>.25});
  if(fora)h+='<div class="warn">As opções escolhidas fogem do perfil <strong>'+PN[st.perfil]+'</strong> (o perfil prevê cerca de '+pc(PB[st.perfil].baixo)+' em baixo risco, '+pc(PB[st.perfil].moderado)+' em moderado e '+pc(PB[st.perfil].alto)+' em alto). Use “Sugerir para o meu perfil” para ver uma combinação mais próxima.</div>';
  h+='<div class="big"><div class="l">Valor simulado · perfil '+PN[st.perfil]+' · '+A.items.length+(A.items.length>1?' opções':' opção')+'</div><div class="v">'+brl(v)+'</div>';
@@ -287,7 +295,26 @@ function render(){
    h+='<div class="kv"><span>Liquidez</span><span style="text-align:right">'+o.liq+'</span></div><div class="kv"><span>Garantia</span><span style="text-align:right">'+o.gar+'</span></div>'+
    '<details><summary>Como funciona, riscos e onde investir</summary><p>'+o.d+'</p><p><strong>Principal risco:</strong> '+o.rk+'</p>'+(o.bs?'<p><strong>Base da estimativa:</strong> '+o.bs+'</p>':'')+'<p><strong>Tributação:</strong> '+o.t+'.</p><p><strong>Aplicação mínima:</strong> '+o.min+'.</p><p><strong>Onde encontrar:</strong> '+o.pl+'.</p></details></article>'})});
  h+='<p class="note">Renda fixa usa as taxas atuais, mantidas constantes. Para renda variável e planos multimercado, “cenário ruim”, “média histórica” e “cenário bom” vêm de faixas observadas no passado; não são previsão, e o resultado pode ser pior que o cenário ruim. O IR é simplificado e não inclui taxas de custódia, de administração (exceto na previdência em renda fixa) nem de carregamento.</p>';
- $("res").innerHTML=h}
+ $("res").innerHTML=h;mostrarSalvar()}
+
+/* Simulações salvas (banco de dados) */
+function mostrarSalvar(){$("sim-salvar").hidden=!(authOn&&authUser&&ultimaSim&&ultimaSim.valor>0&&ultimaSim.itens.length)}
+function nomeOpcao(id){for(var i=0;i<O.length;i++)if(O[i].id===id)return O[i].n;return id}
+function listarSims(){
+ if(!(authOn&&authUser)){$("minhas-sim").hidden=true;return}
+ sb.from("simulacoes").select("id,criado_em,perfil,valor,prazo_meses,itens,medio").order("criado_em",{ascending:false}).limit(10).then(function(r){
+  var l=(r&&r.data)||[];$("minhas-sim").hidden=!l.length;
+  $("sim-lista").innerHTML=l.map(function(x){var d=new Date(x.criado_em).toLocaleDateString("pt-BR");
+   return '<div class="card"><div class="kv"><span><strong>'+d+" · "+(PN[x.perfil]||x.perfil)+"</strong></span><span>"+brl(+x.valor)+" em "+x.prazo_meses+" meses</span></div>"+
+    '<p class="note">'+(x.itens||[]).map(function(i){return nomeOpcao(i.id)}).join(", ")+"</p>"+
+    '<div class="kv"><span>Média histórica estimada</span><span><strong>'+brl(+x.medio)+'</strong></span></div><button class="link" data-del-sim="'+x.id+'" type="button">Excluir</button></div>'}).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-del-sim]"),function(b){b.addEventListener("click",function(){
+   sb.from("simulacoes").delete().eq("id",b.getAttribute("data-del-sim")).then(listarSims)})})})}
+$("b-salvar-sim").addEventListener("click",function(){
+ if(!(authOn&&authUser&&ultimaSim))return;var m=$("sim-msg");m.textContent="Salvando…";
+ sb.from("simulacoes").insert({perfil:ultimaSim.perfil,valor:ultimaSim.valor,prazo_meses:ultimaSim.prazo_meses,itens:ultimaSim.itens,pior:ultimaSim.pior,medio:ultimaSim.medio,bom:ultimaSim.bom}).then(function(r){
+  if(r&&r.error){m.textContent="Não foi possível salvar agora. Tente de novo.";return}
+  m.textContent="Simulação salva.";listarSims()},function(){m.textContent="Sem conexão. Tente de novo."})});
 
 /* Escolha das opções */
 function sugerir(){st.sel=SUG[st.perfil].slice(0,st.n)}
@@ -366,6 +393,7 @@ fetch("data.json?v="+Date.now(),{cache:"no-store"}).then(function(r){if(!r.ok)th
 
 /* ---------- Login com Supabase ---------- */
 var TELAS=["entrar","criar","confirmar","recuperar","novasenha","completar"];
+var HASHTELA=(function(){var h=(location.hash||"").slice(1);return h==="criar"||h==="recuperar"?h:""})();
 function base(){return location.origin+location.pathname.replace(/[^\/]*$/,"")}
 function tela(n){TELAS.forEach(function(t){$("a-"+t).hidden=t!==n});$("a-erro").textContent="";$("a-ok").textContent="";$("modal").hidden=true;$("auth").hidden=false}
 function erroAuth(e){var m=String((e&&e.message)||e||"").toLowerCase();
@@ -380,17 +408,22 @@ function emailOk(s){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)}
 function telOk(s){var d=s.replace(/\D/g,"");return d.length===10||d.length===11}
 function mascTel(e){var d=e.target.value.replace(/\D/g,"").slice(0,11),s=d;
  if(d.length>2){var k=d.length>10?7:6;s="("+d.slice(0,2)+") "+d.slice(2,k)+(d.length>k?"-"+d.slice(k):"")}e.target.value=s}
+function voltarAoAssessor(){var v="";try{v=localStorage.getItem("quox-voltar")||""}catch(x){}
+ if(!v)return false;try{localStorage.removeItem("quox-voltar")}catch(x){}
+ var p=v.split("@");if(p[0]==="assessor.html"&&Date.now()-(+p[1]||0)<1800000){location.replace("assessor.html");return true}return false}
 function avisoSessao(){
+ if(voltarAoAssessor())return;
  var ja=false;try{ja=!!sessionStorage.getItem("quox-aviso")}catch(x){}
  $("auth").hidden=true;if(ja){$("modal").hidden=true;return}
  $("cad-campos").hidden=true;$("c-ok").textContent="Entrar";$("c-erro").textContent="";$("modal").hidden=false}
 function decidir(session){
  if(recup)return;
- if(!session){authUser=null;$("ola").textContent="";$("sair").hidden=true;tela("entrar");return}
+ if(!session){authUser=null;$("ola").textContent="";$("sair").hidden=true;mostrarSalvar();tela(HASHTELA||"entrar");HASHTELA="";return}
  authUser=session.user;var meta=authUser.user_metadata||{};
  sb.from("perfis").select("nome,telefone").eq("id",authUser.id).maybeSingle().then(function(r){
   var p=r.data||{},nome=p.nome||meta.nome||meta.full_name||meta.name||authUser.email||"";
   $("ola").textContent="Olá, "+nome.split(" ")[0];$("sair").hidden=false;
+  mostrarSalvar();listarSims();
   if(!p.telefone)tela("completar");else avisoSessao()
  },function(){$("ola").textContent="";$("sair").hidden=false;avisoSessao()})}
 function sair(){try{sessionStorage.removeItem("quox-aviso")}catch(x){}

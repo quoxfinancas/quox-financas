@@ -1,6 +1,6 @@
 // Service worker do QUOX - Finanças: deixa o site e o assessor abrirem sem internet.
 // Rede primeiro (para sempre mostrar a versão mais nova); cache só como reserva.
-const CACHE = "quox-v3";
+const CACHE = "quox-v4";
 const BASICO = ["./", "artigos.html", "simulador.html", "assessor.html", "assessor.js", "assessor-parser.js", "assessor.css", "nav.css", "site.css", "site.js", "config.js", "manifest.webmanifest", "manifest-assessor.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -17,11 +17,12 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   const url = new URL(req.url);
-  if (req.method !== "GET" || url.origin !== self.location.origin) return; // login e CDN passam direto
+  const ehLib = url.hostname === "cdn.jsdelivr.net" && url.pathname.indexOf("supabase-js") >= 0; // biblioteca do login: guardada para abrir sem internet
+  if (req.method !== "GET" || (url.origin !== self.location.origin && !ehLib)) return;
   e.respondWith(
     fetch(req)
       .then((res) => {
-        if (res.ok) {
+        if (res.ok || res.type === "opaque") {
           const copia = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copia));
         }

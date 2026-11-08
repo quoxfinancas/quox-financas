@@ -3,12 +3,14 @@
   "use strict";
   var CFG = window.QUOX_CFG || {};
   var KEY = "quox-assessor-v1";
+  var nuvem = !!(CFG.supabaseUrl && CFG.supabaseKey);
+  var sb = null, user = null, snap = { lanc: {}, div: {}, chat: "[]" }, outbox = [], enviando = false, descartadas = 0, legadoDados = null;
   var PA = window.QuoxParser;
   var CATS_D = PA.CATS_D, CATS_R = PA.CATS_R, FORMAS = PA.FORMAS, BANCOS = PA.BANCOS;
   var TABS = ["chat", "resumo", "categorias", "extrato", "dividas", "relatorio", "lancar"];
   var MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
   var $ = function (id) { return document.getElementById(id); };
-  var estado = carregar();
+  var estado = nuvem ? vazio() : carregar();
   var mes = hoje().slice(0, 7);
   var editLanc = null, editDiv = null, tabAtual = "chat", toastT = null, catAberta = {}, catTipo = "despesa";
 
@@ -72,8 +74,9 @@
   }
   function carregar() { try { var s = localStorage.getItem(KEY); return s ? limpar(JSON.parse(s)) : vazio(); } catch (x) { return vazio(); } }
   function salvar() {
-    try { localStorage.setItem(KEY, JSON.stringify(estado)); $("erro-salvar").hidden = true; }
-    catch (x) { $("erro-salvar").hidden = false; }
+    if (nuvem && user) difusao();
+    guardarCache();
+    if (nuvem && user) descarregar();
   }
 
   /* ---------- cálculos ---------- */
@@ -489,6 +492,7 @@
     document.head.appendChild(s);
   }
   function pegarToken(cb) {
+    if (sb) { sb.auth.getSession().then(function (r) { cb(r && r.data && r.data.session ? r.data.session.access_token : null); }, function () { cb(null); }); return; }
     if (!CFG.supabaseUrl || !CFG.supabaseKey) return cb(null);
     carregarSupabase(function () {
       if (!window.supabase) return cb(null);
@@ -510,6 +514,184 @@
     });
   }
 
+  /* ---------- nuvem (Supabase): login obrigatório e sincronização ---------- */
+  function chave() { return nuvem ? KEY + ":" + (user ? user.id : "anon") : KEY; }
+  function lerCache() {
+    try { var s = localStorage.getItem(chave()); if (!s) return null; var j = JSON.parse(s); return { e: limpar(j.e), o: Array.isArray(j.o) ? j.o.slice(0, 5000) : [] }; } catch (x) { return null; }
+  }
+  function guardarCache() {
+    try { localStorage.setItem(chave(), JSON.stringify(nuvem ? { v: 2, e: estado, o: outbox } : estado)); $("erro-salvar").hidden = true; }
+    catch (x) { $("erro-salvar").hidden = false; }
+  }
+  function snapshotDe(e) {
+    var s = { lanc: {}, div: {}, chat: JSON.stringify(e.chat) };
+    e.lanc.forEach(function (l) { s.lanc[l.id] = JSON.stringify(l); });
+    e.dividas.forEach(function (d) { s.div[d.id] = JSON.stringify(d); });
+    return s;
+  }
+  function linhaLanc(l) { return { user_id: user.id, id: l.id, tipo: l.tipo, valor: l.valor, cat: l.cat, data: l.data, descr: l.desc, forma: l.forma, banco: l.banco }; }
+  function linhaDiv(d) { return { user_id: user.id, id: d.id, nome: d.nome, saldo: d.saldo, juros: d.juros, parcela: d.parcela }; }
+  function enfileirar(op) { outbox = outbox.filter(function (o) { return !(o.k === op.k && o.id === op.id); }); outbox.push(op); }
+  function difusao() {
+    var novo = snapshotDe(estado);
+    estado.lanc.forEach(function (l) { if (snap.lanc[l.id] !== novo.lanc[l.id]) enfileirar({ k: "lanc", a: "up", id: l.id, row: linhaLanc(l) }); });
+    Object.keys(snap.lanc).forEach(function (id) { if (!(id in novo.lanc)) enfileirar({ k: "lanc", a: "del", id: id }); });
+    estado.dividas.forEach(function (d) { if (snap.div[d.id] !== novo.div[d.id]) enfileirar({ k: "div", a: "up", id: d.id, row: linhaDiv(d) }); });
+    Object.keys(snap.div).forEach(function (id) { if (!(id in novo.div)) enfileirar({ k: "div", a: "del", id: id }); });
+    if (snap.chat !== novo.chat) enfileirar({ k: "chat", a: "up", id: "chat" });
+    snap = novo;
+  }
+  function statusSync(modo) {
+    var t = "";
+    if (nuvem && user) t = modo === "sync" ? "Sincronizando…" : outbox.length ? "Salvo no aparelho · " + outbox.length + (outbox.length === 1 ? " alteração pendente" : " alterações pendentes") : "Sincronizado ✓";
+    $("sync").textContent = t;
+  }
+  function erroRede(r) {
+    var m = String((r && r.error && r.error.message) || "").toLowerCase(), st = r && r.status;
+    return /fetch|network|load failed|timeout|failed to/.test(m) || st === 0 || st === 401 || st === 429 || st >= 500;
+  }
+  function requisicao(lote) {
+    var op = lote[0], tabela = op.k === "lanc" ? "lancamentos" : op.k === "div" ? "dividas" : "assessor_chat";
+    if (op.k === "chat") return sb.from(tabela).upsert({ user_id: user.id, msgs: estado.chat, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
+    if (op.a === "del") return sb.from(tabela).delete().in("id", lote.map(function (o) { return o.id; }));
+    return sb.from(tabela).upsert(lote.map(function (o) { return o.row; }), { onConflict: "user_id,id" });
+  }
+  function passo() {
+    if (!outbox.length) return Promise.resolve(true);
+    var op = outbox[0], n = 1;
+    if (op.k !== "chat") while (n < outbox.length && n < 100 && outbox[n].k === op.k && outbox[n].a === op.a) n++;
+    var lote = outbox.slice(0, n);
+    return Promise.resolve(requisicao(lote)).then(function (r) {
+      if (r && r.error) { if (erroRede(r)) return false; descartadas++; }
+      outbox = outbox.filter(function (o) { return lote.indexOf(o) < 0; });
+      guardarCache();
+      return passo();
+    }, function () { return false; });
+  }
+  function descarregar() {
+    if (!sb || !user || enviando) return Promise.resolve();
+    if (!outbox.length) { statusSync(); return Promise.resolve(); }
+    enviando = true; statusSync("sync");
+    return passo().then(function (ok) {
+      enviando = false; guardarCache(); statusSync();
+      if (ok && outbox.length) return descarregar();
+    });
+  }
+  function pagina(tabela, colunas) {
+    var todas = [], de = 0, tam = 1000;
+    function prox() {
+      return sb.from(tabela).select(colunas).order("id").range(de, de + tam - 1).then(function (r) {
+        if (r.error) throw r.error;
+        var d = r.data || []; todas = todas.concat(d);
+        if (d.length === tam && todas.length < 20000) { de += tam; return prox(); }
+        return todas;
+      });
+    }
+    return prox();
+  }
+  function baixar() {
+    if (!sb || !user) return Promise.resolve();
+    return Promise.all([
+      pagina("lancamentos", "id,tipo,valor,cat,data,descr,forma,banco"),
+      pagina("dividas", "id,nome,saldo,juros,parcela"),
+      sb.from("assessor_chat").select("msgs").maybeSingle()
+    ]).then(function (v) {
+      if (outbox.length || enviando) return;
+      var chat = v[2] && v[2].data && Array.isArray(v[2].data.msgs) ? v[2].data.msgs : [];
+      estado = limpar({
+        lanc: v[0].map(function (r) { return { id: r.id, tipo: r.tipo, valor: +r.valor, cat: r.cat, data: r.data, desc: r.descr, forma: r.forma, banco: r.banco }; }),
+        dividas: v[1].map(function (r) { return { id: r.id, nome: r.nome, saldo: +r.saldo, juros: +r.juros, parcela: +r.parcela }; }),
+        chat: chat
+      });
+      snap = snapshotDe(estado); guardarCache(); statusSync(); render();
+    }).catch(function () { statusSync(); });
+  }
+  function sincronizarTudo() { return descarregar().then(function () { if (!outbox.length) return baixar(); }); }
+
+  function modo(gate) { document.body.classList.toggle("ap-gate", gate); document.body.classList.toggle("ap-ok", !gate); }
+  function mostrarLogin() { modo(true); $("gate").hidden = false; $("gate-wait").hidden = true; $("gate-box").hidden = false; }
+  function saudacao(u) {
+    var meta = u.user_metadata || {}, fallback = meta.nome || meta.full_name || meta.name || u.email || "";
+    $("ola").textContent = fallback ? "Olá, " + String(fallback).split(" ")[0] : "";
+    if (!sb) return;
+    sb.from("perfis").select("nome").eq("id", u.id).maybeSingle().then(function (r) {
+      var n = r && r.data && r.data.nome; if (n) $("ola").textContent = "Olá, " + String(n).split(" ")[0];
+    }, function () {});
+  }
+  function verLegado() {
+    try {
+      var s = localStorage.getItem(KEY); if (!s) return;
+      var l = limpar(JSON.parse(s)); if (!l.lanc.length && !l.dividas.length) { localStorage.removeItem(KEY); return; }
+      $("legado-txt").textContent = "Encontramos " + l.lanc.length + (l.lanc.length === 1 ? " lançamento" : " lançamentos") + " e " + l.dividas.length + (l.dividas.length === 1 ? " dívida" : " dívidas") + " salvos neste aparelho, de antes do login. Quer enviar para a sua conta?";
+      $("legado").hidden = false; legadoDados = l;
+    } catch (x) {}
+  }
+  function iniciarUI() {
+    var h0 = (location.hash || "").slice(1);
+    setTab(TABS.indexOf(h0) >= 0 ? h0 : "chat");
+  }
+  function entrou(u) {
+    if (user && user.id === u.id) return;
+    user = u; modo(false); $("gate").hidden = true;
+    var c = lerCache(); estado = c ? c.e : vazio(); outbox = c ? c.o : []; snap = snapshotDe(estado);
+    $("priv").querySelector("summary").innerHTML = "<strong>Seus dados ficam salvos na sua conta</strong> (toque para ler mais)";
+    $("priv").querySelector("p").textContent = "Os lançamentos, as dívidas e o histórico do chat são guardados com segurança na sua conta e sincronizados entre os seus aparelhos. Só você os vê. Uma cópia fica no aparelho para funcionar sem internet. Ferramenta educativa, não é consultoria financeira.";
+    $("sair").hidden = false; saudacao(u); verLegado(); statusSync(); iniciarUI();
+    sincronizarTudo();
+  }
+  function saiu() {
+    user = null; estado = vazio(); outbox = []; snap = snapshotDe(estado);
+    $("sair").hidden = true; $("ola").textContent = ""; $("sync").textContent = ""; $("legado").hidden = true;
+    mostrarLogin();
+  }
+  function sairDaConta() {
+    descarregar().then(function () {
+      if (outbox.length) toast("Há alterações que ainda não sincronizaram. Elas ficam guardadas neste aparelho.");
+      else { try { localStorage.removeItem(chave()); } catch (x) {} }
+      return sb ? sb.auth.signOut() : null;
+    }).then(function () { if (!sb) saiu(); }, function () { saiu(); });
+  }
+  function usuarioEmCache() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (/^sb-.*-auth-token$/.test(k)) { var j = JSON.parse(localStorage.getItem(k)); var u = j && (j.user || (j.currentSession && j.currentSession.user)); if (u && u.id) return u; }
+      }
+    } catch (x) {}
+    return null;
+  }
+  function msgAuth(e) {
+    var m = String((e && e.message) || e || "").toLowerCase();
+    if (m.indexOf("invalid login") >= 0) return "E-mail ou senha incorretos.";
+    if (m.indexOf("not confirmed") >= 0) return "Confirme seu e-mail pelo link que enviamos antes de entrar.";
+    if (m.indexOf("rate limit") >= 0 || m.indexOf("too many") >= 0) return "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
+    if (m.indexOf("fetch") >= 0 || m.indexOf("network") >= 0) return "Sem conexão. Verifique a internet e tente de novo.";
+    return "Não foi possível entrar. Tente novamente.";
+  }
+  function marcarVoltar() { try { localStorage.setItem("quox-voltar", "assessor.html@" + Date.now()); } catch (x) {} }
+  function baseSite() { return location.origin + location.pathname.replace(/[^\/]*$/, ""); }
+  function iniciarNuvem() {
+    $("gate").hidden = false; modo(true);
+    carregarSupabase(function () {
+      if (!window.supabase) {
+        var u = usuarioEmCache();
+        if (u && lerCacheDe(u)) { entrou(u); } else { $("gate-wait").textContent = "Sem conexão. Conecte-se à internet para entrar."; }
+        return;
+      }
+      sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+      sb.auth.onAuthStateChange(function (ev, session) {
+        if (ev === "SIGNED_OUT") { setTimeout(saiu, 0); return; }
+        if (ev === "TOKEN_REFRESHED" || ev === "PASSWORD_RECOVERY") return;
+        if (session && session.user) setTimeout(function () { entrou(session.user); }, 0);
+      });
+      sb.auth.getSession().then(function (r) {
+        var s = r && r.data && r.data.session;
+        if (s) entrou(s.user); else if (!user) mostrarLogin();
+      }, function () { if (!user) mostrarLogin(); });
+    });
+  }
+  function lerCacheDe(u) { try { return !!localStorage.getItem(KEY + ":" + u.id); } catch (x) { return false; } }
+
   /* ---------- eventos ---------- */
   document.querySelectorAll(".ap-tabs button").forEach(function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
   $("mes-ant").addEventListener("click", function () { mes = addMes(mes, -1); render(); });
@@ -527,8 +709,49 @@
   $("b-csv").addEventListener("click", exportarCsv);
   $("b-backup").addEventListener("click", backup);
   $("b-restaurar").addEventListener("change", restaurar);
-  duplo($("b-apagar"), "Clique de novo para apagar tudo", function () { estado = vazio(); salvar(); fimEdicao(); fimEdicaoDiv(); $("b-msg").textContent = "Todos os dados foram apagados deste aparelho."; render(); });
+  duplo($("b-apagar"), "Clique de novo para apagar tudo", function () { estado = vazio(); salvar(); fimEdicao(); fimEdicaoDiv(); $("b-msg").textContent = nuvem ? "Todos os dados foram apagados da sua conta." : "Todos os dados foram apagados deste aparelho."; render(); });
   if (CFG.iaUrl) { $("ia-box").hidden = false; $("ia-btn").addEventListener("click", pedirIA); }
+
+  $("g-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var em = $("g-email").value.trim(), se = $("g-senha").value, er = $("g-erro");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em) || !se) { er.textContent = "Informe e-mail e senha."; return; }
+    if (!sb) { er.textContent = "Sem conexão. Tente de novo."; return; }
+    er.textContent = "Entrando…";
+    sb.auth.signInWithPassword({ email: em, password: se }).then(function (r) {
+      if (r.error) { er.textContent = msgAuth(r.error); return; }
+      er.textContent = ""; $("g-senha").value = "";
+      if (r.data && r.data.session) entrou(r.data.session.user);
+    }, function (x) { er.textContent = msgAuth(x); });
+  });
+  $("g-google").addEventListener("click", function () {
+    if (!sb) return;
+    marcarVoltar();
+    sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: baseSite(), skipBrowserRedirect: true } }).then(function (r) {
+      var er = $("g-erro");
+      if (r && r.error) { er.textContent = msgAuth(r.error); return; }
+      var u = r && r.data && r.data.url;
+      if (!u) { er.textContent = "Não foi possível iniciar o login."; return; }
+      if (u.indexOf("apikey=") < 0) u += (u.indexOf("?") < 0 ? "?" : "&") + "apikey=" + encodeURIComponent(CFG.supabaseKey);
+      location.href = u;
+    }, function (x) { $("g-erro").textContent = msgAuth(x); });
+  });
+  document.querySelectorAll("[data-voltar]").forEach(function (a) { a.addEventListener("click", marcarVoltar); });
+  $("sair").addEventListener("click", sairDaConta);
+  $("leg-imp").addEventListener("click", function () {
+    var l = legadoDados; if (!l) return;
+    var ids = {};
+    estado.lanc.forEach(function (x) { ids[x.id] = 1; });
+    l.lanc.forEach(function (x) { if (!ids[x.id]) estado.lanc.push(x); });
+    var idd = {}; estado.dividas.forEach(function (x) { idd[x.id] = 1; });
+    l.dividas.forEach(function (x) { if (!idd[x.id]) estado.dividas.push(x); });
+    salvar(); try { localStorage.removeItem(KEY); } catch (x) {}
+    $("legado").hidden = true; legadoDados = null; toast("Dados enviados para a sua conta"); render();
+  });
+  duplo($("leg-desc"), "Confirmar descarte?", function () { try { localStorage.removeItem(KEY); } catch (x) {} $("legado").hidden = true; legadoDados = null; });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && nuvem && user) sincronizarTudo(); });
+  window.addEventListener("online", function () { if (nuvem && user) sincronizarTudo(); });
+  setInterval(function () { if (nuvem && user && outbox.length) descarregar(); }, 30000);
 
   /* instalar como app */
   var adiado = null;
@@ -539,6 +762,5 @@
   if (ios && !navigator.standalone) $("ios-dica").hidden = false;
 
   window.addEventListener("hashchange", function () { var h = (location.hash || "").slice(1); if (TABS.indexOf(h) >= 0 && h !== tabAtual) setTab(h); });
-  var h0 = (location.hash || "").slice(1);
-  setTab(TABS.indexOf(h0) >= 0 ? h0 : "chat");
+  if (nuvem) iniciarNuvem(); else { document.body.classList.add("ap-ok"); iniciarUI(); }
 })();

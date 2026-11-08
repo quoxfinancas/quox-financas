@@ -1,3 +1,29 @@
+# QUOX - Finanças (site)
+
+## O que tem no site
+
+| Página | Arquivo | O que é |
+|---|---|---|
+| Início | `index.html` | Página inicial do blog (gerada pelo gerador) |
+| Artigos | `artigos.html` e `artigo-*.html` | Blog de educação financeira (gerados pelo gerador) |
+| Simulador de investimentos | `simulador.html` | O simulador, com login (Supabase) |
+| Assessor financeiro | `assessor.html`, `assessor.js`, `assessor.css`, `manifest-assessor.webmanifest` | Aplicativo de gastos, dívidas e relatórios (instalável) |
+| Termos e privacidade | `termos.html`, `privacidade.html`, `empresa.js` | Textos legais e seus dados de contato |
+| Menu e rodapé | `site.js`, `nav.css`, `site.css` | Visual compartilhado |
+| Configuração | `config.js` | Chaves do Supabase e opções (único lugar para editar) |
+
+**Importante (login):** a chave e o endereço do Supabase agora ficam em `config.js`. Copie para lá os valores que estavam no `index.html` antigo. Não precisa mexer em mais nada.
+
+**Todos os arquivos ficam na raiz do repositório** (sem pastas, exceto `scripts/`, `.github/`, `supabase/`, `assets/`, `play-store/`).
+
+## Como adicionar artigos
+Os artigos ficam em `gerador-do-site/` (fora do repositório do site). Peça ao Claude para escrever e gerar novos artigos e depois envie ao GitHub os arquivos novos (`artigo-*.html`, `artigos.html`, `index.html`, `sitemap.xml`).
+
+## Análise com IA no assessor (opcional)
+O assessor já gera dicas automáticas, sem custo. Para ter também um comentário escrito por IA, publique a função `supabase/functions/assessor-ia` (instruções no topo do arquivo) e coloque o endereço em `iaUrl` no `config.js`. O uso da API de IA é pago por uso.
+
+---
+
 # QUOX - Finanças
 
 Simulador de investimentos para o mercado brasileiro, publicado como site estático no GitHub Pages e atualizado automaticamente.
@@ -58,6 +84,7 @@ O login fica salvo no aparelho: quem fecha e reabre o app continua logado, e em 
 
 1. Crie uma conta e um projeto em **supabase.com** (plano gratuito).
 2. **SQL Editor → New query**: cole o conteúdo de `supabase/schema.sql` e clique em Run. Isso cria a tabela de cadastros (nome, e-mail, telefone, consentimento) e a regra de que cada pessoa só vê o próprio cadastro.
+3. **Novo query de novo**: cole `supabase/schema-assessor.sql` e clique em Run. Cria as tabelas `lancamentos`, `dividas`, `assessor_chat` e `simulacoes`, todas com regra de que cada pessoa só acessa os próprios dados. O assessor exige login e sincroniza tudo com a nuvem (com cópia no aparelho para uso offline).
 3. **Authentication → Providers → Email**: deixe ligado e mantenha **Confirm email** ativado.
 4. **Authentication → URL Configuration**: em *Site URL* coloque o endereço do seu site e, em *Redirect URLs*, o mesmo endereço (e `http://localhost:8123` se for testar no computador).
 5. **Project Settings → API**: copie a **Project URL** e a chave **anon public**. Cole em `CFG.supabaseUrl` e `CFG.supabaseKey` no início do script do `index.html`. A chave anon é pública por desenho; quem protege os dados são as regras do passo 2. **Nunca use a chave `service_role` no app.**

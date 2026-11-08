@@ -29,14 +29,16 @@
       <li><strong>Senha:</strong> guardada de forma protegida (criptografada) pelo serviço de autenticação. Nós não temos acesso à sua senha.</li>
       <li><strong>Entrada com o Google:</strong> se você escolher entrar com sua conta Google, recebemos apenas seu nome e seu e-mail. Não acessamos seus e-mails, contatos, arquivos ou outros dados da conta Google.</li>
       <li><strong>Dados no seu aparelho:</strong> o navegador guarda localmente o seu login (para você continuar conectado) e preferências.</li>
-      <li><strong>Assessor financeiro:</strong> os lançamentos de receitas e despesas, as categorias e as dívidas que você cadastra ficam <strong>apenas no seu aparelho</strong> (armazenamento do navegador). Não os enviamos aos nossos servidores e não temos acesso a eles. Por isso, se você limpar os dados do navegador ou trocar de aparelho, eles se perdem, a menos que você tenha feito um backup.</li>
+      <li><strong>Assessor financeiro:</strong> os lançamentos de receitas e despesas (valor, data, categoria, descrição, forma de pagamento e banco ou cartão), as dívidas que você cadastra e o histórico da conversa com o assessor. Esses dados são salvos na sua conta, no banco de dados do Supabase, e uma cópia fica no seu aparelho para o app funcionar sem internet. Eles são protegidos por regras de acesso que permitem que somente você os veja.</li>
+      <li><strong>Simulações salvas:</strong> quando você clica em &quot;Salvar esta simulação&quot;, guardamos na sua conta o perfil, o valor, o prazo, as opções escolhidas e as estimativas daquela simulação.</li>
     </ul>
-    <p>Os valores, prazos e perfil de investidor que você digita nas simulações também são processados no seu próprio aparelho e <strong>não são enviados</strong> aos nossos servidores.</p>
+    <p>Os valores, prazos e perfil de investidor que você digita no simulador são calculados no seu próprio aparelho e <strong>só são enviados aos nossos servidores se você clicar em salvar a simulação</strong>.</p>
     <p><strong>Análise com IA (recurso opcional):</strong> quando este recurso estiver disponível e você clicar em &quot;Gerar análise&quot;, enviamos apenas os <em>totais</em> do mês por categoria e dados numéricos das dívidas (sem descrições, sem nomes de credores e sem dados que identifiquem você) a um serviço de inteligência artificial, para gerar o comentário. Você pode não usar este recurso, e o restante do assessor funciona normalmente.</p>
 
     <h2>3. Para que usamos seus dados</h2>
     <ul>
       <li>Criar e manter a sua conta e permitir que você entre no aplicativo.</li>
+      <li>Guardar e sincronizar entre os seus aparelhos os seus lançamentos, dívidas, conversas com o assessor e simulações.</li>
       <li>Confirmar o seu e-mail e recuperar o acesso quando você esquecer a senha.</li>
       <li>Entrar em contato com você sobre o funcionamento da plataforma.</li>
       <li>Cumprir obrigações legais e proteger o serviço contra fraudes e abusos.</li>
@@ -46,7 +48,7 @@
     <h2>4. Com quem compartilhamos</h2>
     <p>Compartilhamos dados apenas com empresas que prestam a infraestrutura do aplicativo e que tratam os dados em nosso nome:</p>
     <ul>
-      <li><strong>Supabase:</strong> banco de dados e autenticação (cadastro, login e confirmação de e-mail).</li>
+      <li><strong>Supabase:</strong> banco de dados e autenticação (cadastro, login, confirmação de e-mail e os dados do assessor e das simulações salvas).</li>
       <li><strong>Google:</strong> quando você escolhe entrar com a conta Google.</li>
       <li><strong>GitHub (GitHub Pages):</strong> hospedagem das páginas do site. Como em qualquer hospedagem, o provedor pode registrar dados técnicos de acesso, como o endereço IP.</li>
       <li><strong>Provedor de envio de e-mails:</strong> para enviar as mensagens de confirmação e de recuperação de senha.</li>
@@ -54,7 +56,7 @@
     <p>Alguns desses provedores podem armazenar dados em servidores fora do Brasil. Nesses casos, a transferência segue o art. 33 da LGPD. Também podemos compartilhar dados se uma autoridade competente exigir, conforme a lei.</p>
 
     <h2>5. Por quanto tempo guardamos</h2>
-    <p>Guardamos seus dados enquanto a sua conta estiver ativa. Quando você pedir a exclusão, apagamos os dados do cadastro, salvo o que formos obrigados a manter por lei.</p>
+    <p>Guardamos seus dados enquanto a sua conta estiver ativa. Você pode apagar seus lançamentos, dívidas e simulações no próprio aplicativo (opção &quot;Apagar todos os dados&quot; e botões de excluir). Quando você pedir a exclusão da conta, apagamos o cadastro e todos os dados ligados a ela, salvo o que formos obrigados a manter por lei.</p>
 
     <h2>6. Seus direitos</h2>
     <p>Você pode, a qualquer momento e gratuitamente, pedir:</p>

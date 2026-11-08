@@ -112,3 +112,8 @@ details.cat .trilho{height:6px;background:var(--soft);border-radius:99px;margin:
 #priv{padding:8px 12px}
 #ap[data-tab=chat] .ap-top .sub{display:none}
 #ap[data-tab=chat] .ap-top h1{font-size:1.3rem;margin-bottom:0}
+
+/* conta e sincronização */
+.ap-user{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.ap-user .leg{margin:0}
+body[data-page=assessor]:not(.ap-ok) .tab,body[data-page=assessor]:not(.ap-ok) #mes-nav,body[data-page=assessor]:not(.ap-ok) .ap-tabs,body[data-page=assessor]:not(.ap-ok) #priv,body[data-page=assessor]:not(.ap-ok) .ap-inst,body[data-page=assessor]:not(.ap-ok) #erro-salvar{display:none!important}
