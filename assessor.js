@@ -7,7 +7,9 @@
   var sb = null, user = null, snap = { lanc: {}, div: {}, chat: "[]", extra: "" }, outbox = [], enviando = false, descartadas = 0, legadoDados = null;
   var PA = window.QuoxParser;
   var CATS_D = PA.CATS_D, CATS_R = PA.CATS_R, FORMAS = PA.FORMAS, BANCOS = PA.BANCOS;
-  var TABS = ["chat", "resumo", "categorias", "extrato", "planejar", "dividas", "relatorio", "lancar"];
+  var TABS = ["chat", "resumo", "categorias", "extrato", "planejar", "cartoes", "mais", "metas", "importar", "familia", "dividas", "relatorio", "lancar"];
+  var MAIS = ["categorias", "dividas", "metas", "importar", "familia"];
+  window.QuoxTabs = window.QuoxTabs || {};
   var MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
   var $ = function (id) { return document.getElementById(id); };
   var estado = nuvem ? vazio() : carregar();
@@ -50,7 +52,7 @@
   }
 
   /* ---------- armazenamento ---------- */
-  function vazio() { return { v: 1, lanc: [], dividas: [], chat: [], orc: {}, rec: [], contas: [] }; }
+  function vazio() { return { v: 1, lanc: [], dividas: [], chat: [], orc: {}, rec: [], contas: [], cartoes: [], metas: [] }; }
   function limpar(o) {
     var r = vazio();
     if (!o || typeof o !== "object") return r;
@@ -79,6 +81,16 @@
     (Array.isArray(o.contas) ? o.contas : []).slice(0, 300).forEach(function (x) {
       if (!x) return; var v = +x.valor; if (!isFinite(v) || v <= 0 || v > 1e12 || !dataValida(String(x.venc))) return;
       r.contas.push({ id: String(x.id || uid()).slice(0, 14), nome: String(x.nome || "Conta").slice(0, 40), valor: Math.round(v * 100) / 100, venc: x.venc, cat: String(x.cat || "Outros").slice(0, 40), repete: !!x.repete, dia: Math.min(31, Math.max(1, Math.round(+x.dia) || +String(x.venc).slice(8))), pago: !!x.pago, pagoEm: dataValida(String(x.pagoEm)) ? x.pagoEm : "", prox: x.prox ? String(x.prox).slice(0, 14) : "" });
+    });
+    (Array.isArray(o.cartoes) ? o.cartoes : []).slice(0, 20).forEach(function (x) {
+      if (!x) return; var lim = +x.limite || 0, f = Math.round(+x.fecha), v = Math.round(+x.vence);
+      if (!(f >= 1 && f <= 31) || !(v >= 1 && v <= 31) || !isFinite(lim) || lim < 0) return;
+      r.cartoes.push({ id: String(x.id || uid()).slice(0, 14), nome: String(x.nome || "Cartão").slice(0, 30), limite: Math.round(lim * 100) / 100, fecha: f, vence: v, pagas: (Array.isArray(x.pagas) ? x.pagas : []).filter(function (p) { return /^\d{4}-\d{2}$/.test(String(p)); }).slice(-12) });
+    });
+    (Array.isArray(o.metas) ? o.metas : []).slice(0, 30).forEach(function (x) {
+      if (!x) return; var al = +x.alvo, g = +x.guardado || 0; if (!isFinite(al) || al <= 0 || al > 1e12 || !isFinite(g) || g < 0) return;
+      r.metas.push({ id: String(x.id || uid()).slice(0, 14), nome: String(x.nome || "Meta").slice(0, 40), alvo: Math.round(al * 100) / 100, guardado: Math.round(g * 100) / 100, prazo: dataValida(String(x.prazo)) ? x.prazo : "",
+        hist: (Array.isArray(x.hist) ? x.hist : []).filter(function (h) { return h && dataValida(String(h.d)) && isFinite(+h.v); }).slice(-30).map(function (h) { return { d: h.d, v: Math.round(+h.v * 100) / 100 }; }) });
     });
     return r;
   }
@@ -174,7 +186,7 @@
     tabAtual = nome;
     $("ap").setAttribute("data-tab", nome);
     TABS.forEach(function (n) { $("t-" + n).hidden = n !== nome; });
-    var marca = nome === "lancar" ? "chat" : nome;
+    var marca = nome === "lancar" ? "chat" : MAIS.indexOf(nome) >= 0 ? "mais" : nome;
     $("chat-form").addEventListener("submit", function (ev) { ev.preventDefault(); enviarChat($("chat-in").value); });
   $("chat-in").addEventListener("keydown", function (ev) { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); enviarChat($("chat-in").value); } });
   $("chat-manual").addEventListener("click", function () { setTab("lancar"); });
@@ -184,7 +196,7 @@
   $("bancos-dl").innerHTML = BANCOS.map(function (b) { return '<option value="' + esc(b) + '">'; }).join("");
   $("l-forma").innerHTML = '<option value="">Não informado</option>' + FORMAS.map(function (f) { return '<option value="' + esc(f) + '">' + esc(f) + "</option>"; }).join("");
   document.querySelectorAll(".ap-tabs button").forEach(function (b) { if (b.getAttribute("data-tab") === marca) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
-    $("mes-nav").hidden = !(nome === "resumo" || nome === "planejar" || nome === "categorias" || nome === "extrato" || nome === "relatorio");
+    $("mes-nav").hidden = !(nome === "resumo" || nome === "planejar" || nome === "familia" || nome === "categorias" || nome === "extrato" || nome === "relatorio");
     try { history.replaceState(null, "", "#" + nome); } catch (x) {}
     render();
     if (nome === "chat") rolarChat(); else window.scrollTo(0, 0);
@@ -197,6 +209,7 @@
     else if (tabAtual === "categorias") renderCategorias();
     else if (tabAtual === "extrato") renderExtrato();
     else if (tabAtual === "planejar") renderPlanejar();
+    else if (window.QuoxTabs[tabAtual]) window.QuoxTabs[tabAtual]();
     else if (tabAtual === "dividas") renderDividas();
     else if (tabAtual === "relatorio") renderRelatorio();
     else if (tabAtual === "lancar") renderLancar();
@@ -365,9 +378,14 @@
     var m = mesReal(), t = totais(m), v = t.porCat[cat] || 0, n = estado.lanc.filter(function (l) { return l.tipo === "despesa" && l.cat === cat && l.data.slice(0, 7) === m; }).length;
     return v ? "Em " + mesLabel(m) + " você gastou " + R(v) + " em " + cat + " (" + n + (n === 1 ? " lançamento" : " lançamentos") + ")." + (t.desp ? " Isso é " + pct((v / t.desp) * 100) + " das despesas." : "") : "Você ainda não tem gastos em " + cat + " em " + mesLabel(m) + ".";
   }
+  function chatExtras(texto, n, temNum) {
+    var hs = (window.QuoxApp && window.QuoxApp.chat) || [];
+    for (var i = 0; i < hs.length; i++) { var r = hs[i](texto, n, temNum); if (r != null) return r; }
+    return null;
+  }
   function enviarChat(texto) {
     texto = String(texto || "").trim(); if (!texto) return;
-    var n = PA.sem(texto), temNum = /\d/.test(n), resp = "", id = "";
+    var n = PA.sem(texto), temNum = /\d/.test(n), resp = "", id = "", extraResp = null;
     pushChat("eu", texto.slice(0, 500));
     if (/^(ajuda|help|\?|como funciona|o que voce faz)/.test(n)) resp = MSG_AJUDA;
     else if (/^(desfazer|desfaz|apagar o ultimo|cancelar o ultimo|errei)/.test(n)) {
@@ -375,6 +393,7 @@
       if (ult) { $("chat-in").value = ""; desfazerChat(ult); return; } resp = "Não tenho um lançamento recente do chat para desfazer. Você também pode excluir na aba Extrato.";
     }
     else if (/^(limpar (a )?conversa|apagar (a )?conversa)/.test(n)) { estado.chat = []; salvar(); $("chat-in").value = ""; renderChat(); return; }
+    else if ((extraResp = chatExtras(texto, n, temNum)) !== null) resp = extraResp;
     else if (PA.ehConta(texto)) { resp = PA.dividir(texto).map(adicionarContaChat).join("\n\n"); }
     else if (temNum && PA.ehLimite(texto)) {
       var lm = PA.interpretarLimite(texto);
@@ -435,16 +454,40 @@
   function fimEdicaoDiv() { editDiv = null; ["d-nome", "d-saldo", "d-juros", "d-parc"].forEach(function (i) { $(i).value = ""; }); $("d-titulo").textContent = "Minhas dívidas"; $("d-cancel").hidden = true; $("d-erro").textContent = ""; }
 
   /* relatório */
+  /* gráfico de pizza (rosca) por categoria e resumo de cada uma */
+  var PAL = ["#0b6b80", "#e07a1f", "#6a4fb3", "#2e9e5b", "#d1495b", "#d9a400", "#3d7ea6", "#8c5e58", "#00a6a6", "#b5179e", "#7a8b99", "#a88b3d", "#4c956c", "#9d6b53"];
+  function corCat(cat) { var i = CATS_D.indexOf(cat); return PAL[(i < 0 ? CATS_D.length : i) % PAL.length]; }
+  function donutHtml(t) {
+    var cs = catsOrdenadas(t), r = 64, c = 2 * Math.PI * r, acc = 0, seg = "";
+    cs.forEach(function (x) {
+      var len = (x[1] / t.desp) * c;
+      seg += '<circle cx="100" cy="100" r="' + r + '" fill="none" stroke="' + corCat(x[0]) + '" stroke-width="38" stroke-dasharray="' + len.toFixed(2) + " " + (c - len).toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 100 100)"><title>' + esc(x[0]) + ": " + R(x[1]) + " (" + pct((x[1] / t.desp) * 100) + ")</title></circle>";
+      acc += len;
+    });
+    var desc = cs.map(function (x) { return x[0] + " " + pct((x[1] / t.desp) * 100); }).join(", ");
+    return '<div class="donut"><svg viewBox="0 0 200 200" role="img" aria-label="Gráfico de pizza das despesas por categoria: ' + esc(desc) + '"><circle cx="100" cy="100" r="' + r + '" fill="none" stroke="#e3edf0" stroke-width="38"/>' + seg +
+      '<text x="100" y="94" text-anchor="middle" class="d-l">Despesas</text><text x="100" y="114" text-anchor="middle" class="d-v">' + esc(R(t.desp)) + "</text></svg>" +
+      '<ul class="d-leg">' + cs.map(function (x) { return '<li><i style="background:' + corCat(x[0]) + '"></i><span>' + esc(x[0]) + "</span><b>" + pct((x[1] / t.desp) * 100) + "</b></li>"; }).join("") + "</ul></div>";
+  }
+  function resumoCategorias(t, pr) {
+    return catsOrdenadas(t).map(function (x) {
+      var cat = x[0], ls = estado.lanc.filter(function (l) { return l.tipo === "despesa" && l.cat === cat && l.data.slice(0, 7) === mes; }), g = {};
+      ls.forEach(function (l) { var k = (l.desc || l.cat).trim().toLowerCase(); g[k] = g[k] || { n: l.desc || l.cat, v: 0, q: 0 }; g[k].v += l.valor; g[k].q++; });
+      var top = Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return b.v - a.v; }).slice(0, 3);
+      var maior = ls.slice().sort(function (a, b) { return b.valor - a.valor; })[0], ant = pr.porCat[cat] || 0;
+      var cmp = ant > 0 ? " Em relação ao mês anterior: " + (x[1] > ant ? "alta de " : x[1] < ant ? "queda de " : "igual, ") + (x[1] === ant ? "" : pct(Math.abs((x[1] - ant) / ant) * 100)) + "." : "";
+      var txt = ls.length + (ls.length === 1 ? " lançamento" : " lançamentos") + ", média de " + R(x[1] / ls.length) + ". " + (top.length > 1 || top[0].q > 1 ? "Principais: " + top.map(function (i) { return esc(i.n) + " (" + R(i.v) + ")"; }).join(", ") + ". " : "") +
+        "Maior gasto: " + esc(maior.desc || maior.cat) + ", " + R(maior.valor) + " em " + maior.data.split("-").reverse().slice(0, 2).join("/") + "." + cmp;
+      return '<div class="cat-res"><div class="cr-h"><i style="background:' + corCat(cat) + '"></i><b>' + esc(cat) + "</b><span>" + R(x[1]) + " · " + pct((x[1] / t.desp) * 100) + "</span></div><p>" + txt + "</p></div>";
+    }).join("");
+  }
   function renderRelatorio() {
     var t = totais(mes), pr = totais(addMes(mes, -1)), cs = catsOrdenadas(t);
     var h = '<div class="rel-h"><h2>Relatório de ' + esc(mesLabel(mes)) + "</h2></div>";
     if (!t.n) { $("rel").innerHTML = h + '<p class="vazio">Sem lançamentos neste mês.</p>'; return; }
     h += '<table class="tabela"><tr><th>Receitas</th><td>' + R(t.rec) + '</td></tr><tr><th>Despesas</th><td>' + R(t.desp) + "</td></tr><tr><th>Saldo do mês</th><td><strong>" + R(t.saldo) + "</strong></td></tr><tr><th>Taxa de poupança</th><td>" + (t.taxa == null ? "–" : pct(t.taxa)) + "</td></tr></table>";
     if (cs.length) {
-      h += "<h3>Despesas por categoria</h3><table class=\"tabela\"><tr><th>Categoria</th><th>Valor</th><th>% do total</th><th>Mês anterior</th></tr>" + cs.map(function (c) {
-        var a = pr.porCat[c[0]] || 0, v = a > 0 ? (c[1] > a ? "▲ " : c[1] < a ? "▼ " : "= ") + pct(((c[1] - a) / a) * 100).replace("-", "") : "–";
-        return "<tr><td>" + esc(c[0]) + "</td><td>" + R(c[1]) + "</td><td>" + pct((c[1] / t.desp) * 100) + "</td><td>" + v + "</td></tr>";
-      }).join("") + "</table>";
+      h += "<h3>Despesas por categoria</h3>" + donutHtml(t) + resumoCategorias(t, pr);
       var maiores = estado.lanc.filter(function (l) { return l.tipo === "despesa" && l.data.slice(0, 7) === mes; }).sort(function (a, b) { return b.valor - a.valor; }).slice(0, 5);
       h += "<h3>Maiores gastos</h3>" + maiores.map(function (l) { return itemLanc(l, false); }).join("");
     }
@@ -479,22 +522,22 @@
     if (editDiv) estado.dividas = estado.dividas.map(function (x) { return x.id === editDiv ? d : x; }); else estado.dividas.push(d);
     salvar(); fimEdicaoDiv(); render(); toast("Dívida salva");
   }
-  function baixar(nome, tipo, txt) {
+  function salvarArquivo(nome, tipo, txt) {
     var b = new Blob([txt], { type: tipo }), u = URL.createObjectURL(b), a = document.createElement("a");
     a.href = u; a.download = nome; document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(u); }, 2000);
   }
   function csvCel(s) { s = String(s); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; }
-  function exportarCsv() {
-    var l = ordenar(estado.lanc.filter(function (x) { return x.data.slice(0, 7) === mes; })).reverse();
+  function exportarCsv(tudo) {
+    var l = ordenar(estado.lanc.filter(function (x) { return tudo === true || x.data.slice(0, 7) === mes; })).reverse();
     var linhas = ["Data;Tipo;Categoria;Descrição;Forma de pagamento;Banco ou cartão;Valor"].concat(l.map(function (x) {
       return [x.data, x.tipo, csvCel(x.cat), csvCel(x.desc), csvCel(x.forma || ""), csvCel(x.banco || ""), (x.tipo === "despesa" ? "-" : "") + x.valor.toFixed(2).replace(".", ",")].join(";");
     }));
-    baixar("quox-lancamentos-" + mes + ".csv", "text/csv;charset=utf-8", "﻿" + linhas.join("\r\n"));
-    $("b-msg").textContent = "Arquivo CSV gerado com os lançamentos de " + mesLabel(mes) + ".";
+    salvarArquivo("quox-lancamentos-" + (tudo === true ? "todos" : mes) + ".csv", "text/csv;charset=utf-8", "﻿" + linhas.join("\r\n"));
+    $("b-msg").textContent = "Arquivo CSV gerado com " + (tudo === true ? "todos os lançamentos" : "os lançamentos de " + mesLabel(mes)) + ". Abre direto no Excel e no Google Planilhas.";
   }
   function backup() {
-    baixar("quox-backup-" + hoje() + ".json", "application/json", JSON.stringify(estado));
+    salvarArquivo("quox-backup-" + hoje() + ".json", "application/json", JSON.stringify(estado));
     $("b-msg").textContent = "Backup gerado. Guarde o arquivo em um lugar seguro (nuvem ou e-mail para você mesmo).";
   }
   function restaurar(ev) {
@@ -550,7 +593,7 @@
     catch (x) { $("erro-salvar").hidden = false; }
   }
   function snapshotDe(e) {
-    var s = { lanc: {}, div: {}, chat: JSON.stringify(e.chat), extra: JSON.stringify([e.orc, e.rec, e.contas]) };
+    var s = { lanc: {}, div: {}, chat: JSON.stringify(e.chat), extra: JSON.stringify([e.orc, e.rec, e.contas, e.cartoes, e.metas]) };
     e.lanc.forEach(function (l) { s.lanc[l.id] = JSON.stringify(l); });
     e.dividas.forEach(function (d) { s.div[d.id] = JSON.stringify(d); });
     return s;
@@ -579,7 +622,7 @@
   }
   function requisicao(lote) {
     var op = lote[0], tabela = op.k === "lanc" ? "lancamentos" : op.k === "div" ? "dividas" : op.k === "extra" ? "assessor_extra" : "assessor_chat";
-    if (op.k === "extra") return sb.from(tabela).upsert({ user_id: user.id, dados: { orc: estado.orc, rec: estado.rec, contas: estado.contas }, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
+    if (op.k === "extra") return sb.from(tabela).upsert({ user_id: user.id, dados: { orc: estado.orc, rec: estado.rec, contas: estado.contas, cartoes: estado.cartoes, metas: estado.metas }, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
     if (op.k === "chat") return sb.from(tabela).upsert({ user_id: user.id, msgs: estado.chat, atualizado_em: new Date().toISOString() }, { onConflict: "user_id" });
     if (op.a === "del") return sb.from(tabela).delete().in("id", lote.map(function (o) { return o.id; }));
     return sb.from(tabela).upsert(lote.map(function (o) { return o.row; }), { onConflict: "user_id,id" });
@@ -632,10 +675,10 @@
         lanc: v[0].map(function (r) { return { id: r.id, tipo: r.tipo, valor: +r.valor, cat: r.cat, data: r.data, desc: r.descr, forma: r.forma, banco: r.banco }; }),
         dividas: v[1].map(function (r) { return { id: r.id, nome: r.nome, saldo: +r.saldo, juros: +r.juros, parcela: +r.parcela }; }),
         chat: chat,
-        orc: ex ? ex.orc : estado.orc, rec: ex ? ex.rec : estado.rec, contas: ex ? ex.contas : estado.contas
+        orc: ex ? ex.orc : estado.orc, rec: ex ? ex.rec : estado.rec, contas: ex ? ex.contas : estado.contas, cartoes: ex ? ex.cartoes : estado.cartoes, metas: ex ? ex.metas : estado.metas
       });
       snap = snapshotDe(estado);
-      if (!ex && (Object.keys(estado.orc).length || estado.rec.length || estado.contas.length)) enfileirar({ k: "extra", a: "up", id: "extra" });
+      if (!ex && (Object.keys(estado.orc).length || estado.rec.length || estado.contas.length || estado.cartoes.length || estado.metas.length)) enfileirar({ k: "extra", a: "up", id: "extra" });
       gerarRecorrentes(); guardarCache(); statusSync(); render(); descarregar();
     }).catch(function () { statusSync(); });
   }
@@ -844,6 +887,7 @@
     if (at) partes.push(at + (at === 1 ? " conta atrasada" : " contas atrasadas"));
     if (hj) partes.push(hj + (hj === 1 ? " conta vence hoje" : " contas vencem hoje"));
     if (pr) partes.push(pr + (pr === 1 ? " conta vence" : " contas vencem") + " em até 3 dias");
+    var exA = window.QuoxApp && window.QuoxApp.avisosExtra ? window.QuoxApp.avisosExtra() : []; exA.forEach(function (x) { partes.push(x); });
     var m = mesReal(), estouro = Object.keys(estado.orc).filter(function (c) { return gastoCat(c, m) >= estado.orc[c]; });
     if (estouro.length) partes.push("limite estourado: " + estouro.slice(0, 2).join(", ") + (estouro.length > 2 ? " e mais " + (estouro.length - 2) : ""));
     if (!partes.length) { el.hidden = true; el.innerHTML = ""; return; }
@@ -935,7 +979,8 @@
   $("p-extra").addEventListener("input", renderPlano);
   $("p-met").addEventListener("change", renderPlano);
   $("b-print").addEventListener("click", function () { window.print(); });
-  $("b-csv").addEventListener("click", exportarCsv);
+  $("b-csv").addEventListener("click", function () { exportarCsv(false); });
+  $("b-csv-tudo").addEventListener("click", function () { exportarCsv(true); });
   $("b-backup").addEventListener("click", backup);
   $("b-restaurar").addEventListener("change", restaurar);
   duplo($("b-apagar"), "Clique de novo para apagar tudo", function () { estado = vazio(); salvar(); fimEdicao(); fimEdicaoDiv(); $("b-msg").textContent = nuvem ? "Todos os dados foram apagados da sua conta." : "Todos os dados foram apagados deste aparelho."; render(); });
@@ -991,5 +1036,12 @@
   if (ios && !navigator.standalone) $("ios-dica").hidden = false;
 
   window.addEventListener("hashchange", function () { var h = (location.hash || "").slice(1); if (TABS.indexOf(h) >= 0 && h !== tabAtual) setTab(h); });
+  window.QuoxApp = Object.assign(window.QuoxApp || {}, {
+    estado: function () { return estado; }, salvar: salvar, render: render, setTab: setTab, mes: function () { return mes; },
+    user: function () { return user; }, sb: function () { return sb; }, nuvem: nuvem, enviarChat: enviarChat, pushChat: pushChat,
+    R: R, pct: pct, esc: esc, uid: uid, hoje: hoje, addMes: addMes, mesLabel: mesLabel, parseBR: parseBR, toast: toast, duplo: duplo,
+    itemLanc: itemLanc, ligarAcoes: ligarAcoes, dataValida: dataValida, catsOrdenadas: catsOrdenadas, totais: totais, corCat: corCat,
+    chat: (window.QuoxApp && window.QuoxApp.chat) || [], avisosExtra: window.QuoxApp && window.QuoxApp.avisosExtra
+  });
   if (nuvem) iniciarNuvem(); else { document.body.classList.add("ap-ok"); iniciarUI(); }
 })();

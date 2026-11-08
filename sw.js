@@ -1,7 +1,7 @@
 // Service worker do QUOX - Finanças: deixa o site e o assessor abrirem sem internet.
 // Rede primeiro (para sempre mostrar a versão mais nova); cache só como reserva.
-const CACHE = "quox-v5";
-const BASICO = ["./", "artigos.html", "simulador.html", "assessor.html", "assessor.js", "assessor-parser.js", "assessor.css", "nav.css", "site.css", "site.js", "config.js", "manifest.webmanifest", "manifest-assessor.webmanifest", "icon-192.png", "icon-512.png"];
+const CACHE = "quox-v6";
+const BASICO = ["./", "artigos.html", "simulador.html", "assessor.html", "assessor.js", "assessor-parser.js", "assessor-lib.js", "assessor-extras.js", "assessor.css", "nav.css", "site.css", "site.js", "config.js", "manifest.webmanifest", "manifest-assessor.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
   // cada arquivo é guardado separadamente: se um faltar, os outros continuam

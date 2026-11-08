@@ -177,6 +177,76 @@
     </form>
   </section>
 
+  <!-- MAIS -->
+  <section class="tab" id="t-mais" hidden>
+    <div class="painel"><h2>Mais ferramentas</h2>
+      <div class="menu-mais">
+        <button type="button" data-ir="categorias"><b>Categorias</b><small>Veja os gastos agrupados por categoria</small></button>
+        <button type="button" data-ir="dividas"><b>Dívidas</b><small>Cadastre e monte um plano para quitar</small></button>
+        <button type="button" data-ir="metas"><b>Metas e caixinhas</b><small>Reserva de emergência, viagem, objetivos</small></button>
+        <button type="button" data-ir="importar"><b>Importar extrato</b><small>Traga lançamentos do seu banco (OFX ou CSV)</small></button>
+        <button type="button" data-ir="familia"><b>Conta compartilhada</b><small>Casal ou família no mesmo controle</small></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARTÕES -->
+  <section class="tab" id="t-cartoes" hidden>
+    <form class="painel" id="f-car" novalidate>
+      <h2 id="car-titulo">Meus cartões de crédito</h2>
+      <p class="sub">Cadastre o cartão com o dia de fechamento e de vencimento da fatura. Eu somo as compras que você lança no crédito com o nome desse cartão.</p>
+      <div id="car-sug" class="chat-sug"></div>
+      <label>Nome do cartão (o mesmo que você escreve no lançamento)<input id="car-nome" maxlength="30" list="bancos-dl" autocomplete="off" placeholder="Ex.: Nubank"></label>
+      <div class="grid2">
+        <label>Limite (R$)<input id="car-lim" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+        <label>Dia do fechamento<input id="car-fecha" inputmode="numeric" autocomplete="off" placeholder="Ex.: 10"></label>
+      </div>
+      <label>Dia do vencimento<input id="car-vence" inputmode="numeric" autocomplete="off" placeholder="Ex.: 17"></label>
+      <p class="erro-t" id="car-erro" role="alert"></p>
+      <div class="linha"><button class="btn" type="submit">Salvar cartão</button><button class="btn sec" type="button" id="car-cancel" hidden>Cancelar edição</button></div>
+    </form>
+    <div id="car-lista"></div>
+    <p class="leg centro">Compras parceladas aparecem inteiras na fatura em que foram lançadas. Pagar a fatura não gera nova despesa, porque as compras já foram contadas quando você as lançou.</p>
+  </section>
+
+  <!-- METAS -->
+  <section class="tab" id="t-metas" hidden>
+    <form class="painel" id="f-meta" novalidate>
+      <h2>Metas e caixinhas</h2>
+      <p class="sub">Defina quanto quer juntar e acompanhe. Guardar numa meta não é despesa: serve só para você acompanhar o progresso.</p>
+      <label>Nome<input id="m-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Reserva de emergência, Viagem"></label>
+      <div class="grid2">
+        <label>Quanto quer juntar (R$)<input id="m-alvo" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+        <label>Até quando (opcional)<input id="m-prazo" type="date"></label>
+      </div>
+      <label>Já guardado (opcional, R$)<input id="m-ja" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+      <p class="erro-t" id="m-erro" role="alert"></p>
+      <div class="linha"><button class="btn" type="submit">Criar meta</button><button class="btn sec" type="button" id="m-reserva">Sugerir reserva de emergência</button></div>
+    </form>
+    <div id="m-lista"></div>
+  </section>
+
+  <!-- IMPORTAR -->
+  <section class="tab" id="t-importar" hidden>
+    <div class="painel">
+      <h2>Importar extrato do banco</h2>
+      <p class="sub">No app ou site do seu banco, baixe o extrato em <strong>OFX</strong> (melhor opção) ou <strong>CSV</strong> e escolha o arquivo aqui. O arquivo é lido no seu aparelho, e só os lançamentos que você confirmar são salvos.</p>
+      <label>Arquivo do extrato<input id="i-arq" type="file" accept=".ofx,.csv,.txt,text/csv,application/x-ofx"></label>
+      <div class="grid2">
+        <label>Forma de pagamento das despesas<select id="i-forma"></select></label>
+        <label>Banco ou cartão<input id="i-banco" maxlength="30" list="bancos-dl" autocomplete="off" placeholder="Ex.: Nubank"></label>
+      </div>
+      <label class="opt"><input type="checkbox" id="i-inv"> <span>Inverter sinais (marque se as despesas aparecerem como receitas)</span></label>
+      <p class="sub" id="i-msg" role="status" style="margin-top:10px"></p>
+    </div>
+    <div class="painel" id="i-prev" hidden></div>
+  </section>
+
+  <!-- CONTA COMPARTILHADA -->
+  <section class="tab" id="t-familia" hidden>
+    <div id="fam"></div>
+  </section>
+
   <!-- DÍVIDAS -->
   <section class="tab" id="t-dividas" hidden>
     <form class="painel" id="f-div" novalidate>
@@ -215,7 +285,8 @@
       <h2>Seus dados</h2>
       <div class="linha wrap-l">
         <button class="btn" type="button" id="b-print">Imprimir ou salvar em PDF</button>
-        <button class="btn sec" type="button" id="b-csv">Exportar mês (CSV)</button>
+        <button class="btn sec" type="button" id="b-csv">Exportar mês (planilha)</button>
+        <button class="btn sec" type="button" id="b-csv-tudo">Exportar tudo (planilha)</button>
         <button class="btn sec" type="button" id="b-backup">Fazer backup (arquivo)</button>
         <label class="btn sec arq">Restaurar backup<input type="file" id="b-restaurar" accept="application/json,.json"></label>
         <button class="btn sec perigo" type="button" id="b-apagar">Apagar todos os dados</button>
@@ -228,17 +299,19 @@
 <nav class="ap-tabs" aria-label="Seções do assessor">
   <button type="button" data-tab="chat"><i>✉</i>Chat</button>
   <button type="button" data-tab="resumo"><i>▤</i>Resumo</button>
-  <button type="button" data-tab="categorias"><i>◉</i>Categorias</button>
   <button type="button" data-tab="extrato"><i>☰</i>Extrato</button>
   <button type="button" data-tab="planejar"><i>&#128197;</i>Planejar</button>
-  <button type="button" data-tab="dividas"><i>％</i>Dívidas</button>
+  <button type="button" data-tab="cartoes"><i>&#128179;</i>Cartões</button>
   <button type="button" data-tab="relatorio"><i>⎙</i>Relatório</button>
+  <button type="button" data-tab="mais"><i>&#8943;</i>Mais</button>
 </nav>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="config.js"></script>
 <script src="assessor-parser.js"></script>
+<script src="assessor-lib.js"></script>
 <script src="assessor.js"></script>
+<script src="assessor-extras.js"></script>
 <script src="site.js"></script>
 </body>
 </html>

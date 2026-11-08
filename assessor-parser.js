@@ -226,7 +226,8 @@
     return { ok: true, cat: cat, valor: Math.round(valor * 100) / 100 };
   }
 
-  var api = { ehConta: ehConta, interpretarConta: interpretarConta, interpretarLimite: interpretarLimite, proxData: proxData, ehLimite: function (t) { return RE_LIMITE.test(sem(t)); },  interpretar: interpretar, dividir: dividir, categoriaCitada: categoriaCitada, sem: sem, CATS_D: CATS_D, CATS_R: CATS_R, FORMAS: FORMAS, BANCOS: BANCOS };
+  function classificar(desc, tipo) { var x = melhorCat(sem(desc), tipo === "receita" ? LR : LD); return x ? x.cat : "Outros"; }
+  var api = { classificar: classificar,  ehConta: ehConta, interpretarConta: interpretarConta, interpretarLimite: interpretarLimite, proxData: proxData, ehLimite: function (t) { return RE_LIMITE.test(sem(t)); },  interpretar: interpretar, dividir: dividir, categoriaCitada: categoriaCitada, sem: sem, CATS_D: CATS_D, CATS_R: CATS_R, FORMAS: FORMAS, BANCOS: BANCOS };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.QuoxParser = api;
 })(typeof window !== "undefined" ? window : globalThis);
