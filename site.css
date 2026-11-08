@@ -67,7 +67,7 @@ a.card:hover{border-color:var(--accent)}
 
 
 
-.conta-box{margin-top:22px;max-width:420px;background:#fff;color:var(--ink);border-radius:14px;padding:18px 20px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.conta-box{margin-top:22px;max-width:420px;background:#fff;color:var(--ink);border-radius:14px;padding:18px 20px;border:1px solid var(--line);box-shadow:0 6px 24px rgba(11,122,148,.12)}
 .conta-box h2{margin:0 0 8px;font-size:1.2rem}.conta-box p{color:var(--muted);margin:0 0 10px;font-size:.95rem;max-width:none}
 .conta-box label{display:block;font-size:.88rem;font-weight:600;margin:0 0 10px}
 .conta-box input[type=text],.conta-box input[type=email],.conta-box input[type=password],.conta-box input[type=tel],.conta-box input:not([type]){display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:1rem}
@@ -81,3 +81,5 @@ a.card:hover{border-color:var(--accent)}
 .hero .hero-conta a:not(.btn){color:var(--accent)}
 
 .conta-page{min-height:60vh;display:flex;justify-content:center;align-items:flex-start;padding:36px 0}.conta-page .conta-box{margin:0;width:100%;box-shadow:0 2px 14px rgba(8,26,33,.12);border:1px solid var(--line)}
+.pref-email{margin:14px 0 6px;padding-top:12px;border-top:1px solid var(--line)}
+.conta-box label.opt input{margin-top:3px}

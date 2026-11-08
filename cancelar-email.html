@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parar de receber o resumo semanal - QUOX - Finanças</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="favicon-48.png">
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body data-page="cancelar-email">
+<main class="wrap">
+<div class="conta-page">
+<div class="conta-box" id="cx-box">
+<h2>Parar de receber o resumo semanal</h2>
+<p id="cx-txt">Confirme para deixarmos de enviar o resumo semanal por e-mail. Você pode ligar de novo quando quiser, na página da sua conta.</p>
+<button class="btn" type="button" id="cx-btn">Parar de receber</button>
+<p class="mini"><a href="conta.html">Ir para a minha conta</a></p>
+</div>
+</div>
+</main>
+<script src="config.js"></script>
+<script>
+(function () {
+  var CFG = window.QUOX_CFG || {}, $ = function (i) { return document.getElementById(i); };
+  var t = (new URLSearchParams(location.search).get("t") || "").trim();
+  var ok = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t);
+  if (!ok || !CFG.supabaseUrl || !CFG.supabaseKey) { $("cx-txt").textContent = "Este link não é válido. Para parar de receber, entre na sua conta e desligue o resumo semanal."; $("cx-btn").hidden = true; return; }
+  $("cx-btn").addEventListener("click", function () {
+    $("cx-btn").disabled = true;
+    fetch(CFG.supabaseUrl + "/rest/v1/rpc/cancelar_email", { method: "POST", headers: { apikey: CFG.supabaseKey, "Content-Type": "application/json" }, body: JSON.stringify({ t: t }) })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (feito) {
+        $("cx-txt").textContent = feito ? "Pronto! Você não vai mais receber o resumo semanal." : "Este link já foi usado ou não é mais válido. Se ainda receber e-mails, desligue o resumo na sua conta.";
+        $("cx-btn").hidden = true;
+      })
+      .catch(function () { $("cx-txt").textContent = "Não foi possível concluir agora. Tente de novo em instantes."; $("cx-btn").disabled = false; });
+  });
+})();
+</script>
+<script src="site.js"></script>
+</body>
+</html>
