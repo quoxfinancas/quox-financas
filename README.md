@@ -148,3 +148,7 @@ A aba **Planejar** reúne contas a pagar (com aviso no topo do app), limites por
 - **Desafios** (aba em Mais): "N dias sem gastar com categoria", "teto de gasto em categoria" e "anotar todos os dias"; progresso automático. Chat: "desafios".
 - **Resumo semanal:** card "Sua semana" no Resumo, com botão de compartilhar. Chat: "resumo da semana".
 - Sem SQL novo (desafios ficam em `assessor_extra`). Cache: `quox-v9`. Arquivo novo: `assessor-fase3.js`.
+
+## E-mail semanal
+
+Guia completo em `GUIA-EMAIL-SEMANAL.md`. Peças: `supabase/schema-email.sql` (tabela + RLS + `cancelar_email`), `supabase/schema-email-cron.sql` (agendamento diário às 08:00 de Brasília), função `supabase/functions/resumo-semanal` (código em `resumo.js`; o `index.ts` é gerado por `scripts/build-email-fn.mjs`), página `cancelar-email.html` e a opção na página da conta. Testes: `node scripts/test-email.mjs`.

@@ -42,9 +42,12 @@ function prefEmail(){
   cx.checked=!!(r.data&&r.data.semanal);cx.disabled=false},function(){cx.closest(".pref-email").hidden=true});
  cx.addEventListener("change",function(){
   var on=cx.checked;cx.disabled=true;mg.textContent="";
-  sb.from("email_prefs").upsert({user_id:user.id,semanal:on,consentido_em:on?new Date().toISOString():null,atualizado_em:new Date().toISOString()},{onConflict:"user_id"}).then(function(r){
+  var agora=new Date().toISOString(),dados={semanal:on,consentido_em:on?agora:null,atualizado_em:agora};
+  sb.from("email_prefs").update(dados).eq("user_id",user.id).select("user_id").then(function(r){
+   if(r.error||(r.data&&r.data.length))return r;
+   dados.user_id=user.id;return sb.from("email_prefs").insert(dados)}).then(function(r){
    cx.disabled=false;
-   if(r.error){cx.checked=!on;mg.textContent="Não foi possível salvar. Tente novamente.";return}
+   if(r.error){cx.checked=!on;mg.textContent="Não foi possível salvar ("+(r.error.message||r.error.code||"erro")+"). Se persistir, rode de novo o arquivo schema-email.sql no Supabase.";return}
    mg.textContent=on?"Ativado. O primeiro e-mail chega em até 7 dias, para "+(user.email||"o seu e-mail")+".":"Desativado. Você não vai mais receber o resumo."},function(){cx.disabled=false;cx.checked=!on;mg.textContent="Sem conexão. Tente novamente."})})}
 function ligar(){
  var q=function(s,f){var e=box.querySelectorAll(s);Array.prototype.forEach.call(e,f)};
