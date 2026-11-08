@@ -185,20 +185,14 @@
     if (TABS.indexOf(nome) < 0) nome = "chat";
     tabAtual = nome;
     $("ap").setAttribute("data-tab", nome);
+    document.body.classList.toggle("ap-chat", nome === "chat");
     TABS.forEach(function (n) { $("t-" + n).hidden = n !== nome; });
     var marca = nome === "lancar" ? "chat" : MAIS.indexOf(nome) >= 0 ? "mais" : nome;
-    $("chat-form").addEventListener("submit", function (ev) { ev.preventDefault(); enviarChat($("chat-in").value); });
-  $("chat-in").addEventListener("keydown", function (ev) { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); enviarChat($("chat-in").value); } });
-  $("chat-manual").addEventListener("click", function () { setTab("lancar"); });
-  $("ir-chat").addEventListener("click", function (ev) { ev.preventDefault(); setTab("chat"); });
-  document.querySelectorAll("#cat-seg button").forEach(function (b) { b.addEventListener("click", function () { catTipo = b.getAttribute("data-tp"); renderCategorias(); }); });
-  $("x-pag").addEventListener("change", renderExtrato);
-  $("bancos-dl").innerHTML = BANCOS.map(function (b) { return '<option value="' + esc(b) + '">'; }).join("");
-  $("l-forma").innerHTML = '<option value="">Não informado</option>' + FORMAS.map(function (f) { return '<option value="' + esc(f) + '">' + esc(f) + "</option>"; }).join("");
   document.querySelectorAll(".ap-tabs button").forEach(function (b) { if (b.getAttribute("data-tab") === marca) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
     $("mes-nav").hidden = !(nome === "resumo" || nome === "planejar" || nome === "familia" || nome === "categorias" || nome === "extrato" || nome === "relatorio");
     try { history.replaceState(null, "", "#" + nome); } catch (x) {}
     render();
+    ajustarChat();
     if (nome === "chat") rolarChat(); else window.scrollTo(0, 0);
   }
   function render() {
@@ -340,8 +334,9 @@
     if (!estado.chat.length) {
       box.innerHTML = '<div class="msg bot"><div class="bolha">' + esc("Oi! Eu sou o assessor da QUOX. " + MSG_AJUDA).replace(/\n/g, "<br>") + "</div></div>";
     } else {
-      box.innerHTML = estado.chat.map(function (m) {
-        var tem = m.id && estado.lanc.some(function (l) { return l.id === m.id; });
+      var ultComId = -1; estado.chat.forEach(function (m, i) { if (m.id && estado.lanc.some(function (l) { return l.id === m.id; })) ultComId = i; });
+      box.innerHTML = estado.chat.map(function (m, i) {
+        var tem = i === ultComId;
         return '<div class="msg ' + m.de + '"><div class="bolha">' + esc(m.t).replace(/\n/g, "<br>") + "</div>" +
           (tem ? '<div class="acs"><button class="mini-b" type="button" data-cedit="' + esc(m.id) + '">Editar</button><button class="mini-b perigo" type="button" data-cundo="' + esc(m.id) + '">Desfazer</button></div>' : "") + "</div>";
       }).join("");
@@ -352,7 +347,30 @@
     $("chat-sug").innerHTML = ex.map(function (e) { return '<button type="button" class="chip" data-ex="' + esc(e) + '">' + esc(e) + "</button>"; }).join("");
     $("chat-sug").querySelectorAll("[data-ex]").forEach(function (b) { b.addEventListener("click", function () { $("chat-in").value = b.getAttribute("data-ex"); $("chat-in").focus(); }); });
   }
-  function rolarChat() { setTimeout(function () { var f = $("chat-form"); if (f && f.scrollIntoView) f.scrollIntoView({ block: "end" }); }, 30); }
+  /* Chat em tela cheia: a lista rola por dentro e a caixa de texto fica sempre visível (inclusive com o teclado do iPhone aberto). */
+  function ajustarChat() {
+    var t = $("t-chat"); if (!t) return;
+    if (t.hidden) { t.style.height = ""; return; }
+    var vv = window.visualViewport, h = vv ? vv.height : window.innerHeight, off = vv ? vv.offsetTop : 0;
+    window.__maxH = Math.max(window.__maxH || 0, window.innerHeight, h);
+    document.body.classList.toggle("kb", h < window.__maxH - 150 && document.activeElement === $("chat-in"));
+    var tabs = document.querySelector(".ap-tabs"), th = document.body.classList.contains("kb") || !tabs ? 0 : tabs.offsetHeight;
+    var top = t.getBoundingClientRect().top - off;
+    t.style.height = Math.max(240, Math.round(h - top - th - 6)) + "px";
+  }
+  function rolarChat() { setTimeout(function () { ajustarChat(); var b = $("chat-lista"); if (b) b.scrollTop = b.scrollHeight; }, 30); }
+  (function () {
+    var vv = window.visualViewport, ch = function () { ajustarChat(); };
+    window.addEventListener("resize", ch); window.addEventListener("orientationchange", function () { setTimeout(function () { ch(); rolarChat(); }, 250); });
+    if (vv) { vv.addEventListener("resize", function () { ch(); rolarChat(); }); vv.addEventListener("scroll", ch); }
+    if (window.ResizeObserver) { var ro = new ResizeObserver(ch); ["avisos", "legado", "ios-dica", "priv"].forEach(function (i) { var e = $(i); if (e) ro.observe(e); }); var tp = document.querySelector(".ap-top"); if (tp) ro.observe(tp); }
+    var ci = $("chat-in"); if (!ci) return;
+    function cresce() { ci.style.height = "auto"; ci.style.height = Math.min(120, ci.scrollHeight) + "px"; }
+    ci.addEventListener("input", cresce);
+    ci.addEventListener("focus", function () { setTimeout(function () { window.scrollTo(0, 0); ajustarChat(); rolarChat(); }, 300); });
+    ci.addEventListener("blur", function () { setTimeout(ajustarChat, 100); });
+    $("chat-form").addEventListener("submit", function () { setTimeout(cresce, 0); });
+  })();
   function desfazerChat(id) {
     var ip = window.QuoxLib.infoParcela(id);
     estado.lanc = estado.lanc.filter(function (l) { var j = ip && window.QuoxLib.infoParcela(l.id); return ip ? !(j && j.g === ip.g) : l.id !== id; });
@@ -1002,6 +1020,14 @@
   document.querySelectorAll('input[name="tipo"]').forEach(function (r) { r.addEventListener("change", function () { preencherCats(tipoSel()); }); });
   $("f-lanc").addEventListener("submit", submitLanc);
   $("l-cancel").addEventListener("click", function () { fimEdicao(); });
+  $("chat-form").addEventListener("submit", function (ev) { ev.preventDefault(); enviarChat($("chat-in").value); });
+  $("chat-in").addEventListener("keydown", function (ev) { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); enviarChat($("chat-in").value); } });
+  $("chat-manual").addEventListener("click", function () { setTab("lancar"); });
+  $("ir-chat").addEventListener("click", function (ev) { ev.preventDefault(); setTab("chat"); });
+  document.querySelectorAll("#cat-seg button").forEach(function (b) { b.addEventListener("click", function () { catTipo = b.getAttribute("data-tp"); renderCategorias(); }); });
+  $("x-pag").addEventListener("change", renderExtrato);
+  $("bancos-dl").innerHTML = BANCOS.map(function (b) { return '<option value="' + esc(b) + '">'; }).join("");
+  $("l-forma").innerHTML = '<option value="">Não informado</option>' + FORMAS.map(function (f) { return '<option value="' + esc(f) + '">' + esc(f) + "</option>"; }).join("");
   $("f-div").addEventListener("submit", submitDiv);
   $("f-conta").addEventListener("submit", submitConta);
   $("f-orc").addEventListener("submit", submitOrc);
@@ -1071,7 +1097,9 @@
   $("instalar").addEventListener("click", function () { if (!adiado) return; adiado.prompt(); adiado = null; $("instalar").hidden = true; });
   window.addEventListener("appinstalled", function () { $("instalar").hidden = true; toast("Aplicativo instalado"); });
   var ua = navigator.userAgent || "", ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  if (ios && !navigator.standalone) $("ios-dica").hidden = false;
+  var iosVisto = false; try { iosVisto = localStorage.getItem("quox-ios-dica") === "1"; } catch (x) {}
+  if (ios && !navigator.standalone && !iosVisto) $("ios-dica").hidden = false;
+  $("ios-fechar").addEventListener("click", function () { $("ios-dica").hidden = true; try { localStorage.setItem("quox-ios-dica", "1"); } catch (x) {} });
 
   window.addEventListener("hashchange", function () { var h = (location.hash || "").slice(1); if (TABS.indexOf(h) >= 0 && h !== tabAtual) setTab(h); });
   window.QuoxApp = Object.assign(window.QuoxApp || {}, {

@@ -46,7 +46,7 @@
   <details class="aviso" id="priv"><summary><strong>Seus dados ficam só neste aparelho</strong> (toque para ler mais)</summary><p style="margin:8px 0 0">Eles ficam no navegador. Se você limpar os dados do navegador ou trocar de celular, eles se perdem: faça um backup na aba <em>Relatório</em>. Ferramenta educativa, não é consultoria financeira.</p></details>
   <div class="ap-inst">
     <button class="btn" id="instalar" type="button" hidden>Instalar como aplicativo</button>
-    <p class="aviso" id="ios-dica" hidden>Para instalar no iPhone ou iPad: toque no botão de <strong>Compartilhar</strong> do Safari e escolha <strong>Adicionar à Tela de Início</strong>.</p>
+    <p class="aviso" id="ios-dica" hidden>Para instalar no iPhone ou iPad: toque no botão de <strong>Compartilhar</strong> do Safari e escolha <strong>Adicionar à Tela de Início</strong>. <button class="link-b" type="button" id="ios-fechar">Entendi</button></p>
   </div>
   <p class="aviso erro" id="erro-salvar" hidden>Não foi possível guardar os dados neste navegador (modo privado ou armazenamento bloqueado). O que você lançar vale só até fechar a página. Faça backup.</p>
 
@@ -64,11 +64,11 @@
     <div class="chat-lista" id="chat-lista" aria-live="polite"></div>
     <div class="chat-sug" id="chat-sug"></div>
     <form class="chat-form" id="chat-form" autocomplete="off">
-      <textarea id="chat-in" rows="1" maxlength="500" placeholder="Ex.: gastei 30 no mercado no cartão Nubank" aria-label="Mensagem"></textarea>
+      <textarea id="chat-in" rows="1" maxlength="500" placeholder="Ex.: gastei 30 no mercado" aria-label="Mensagem" enterkeyhint="send" autocapitalize="sentences"></textarea>
       <button class="mic" type="button" id="chat-mic" aria-label="Falar o gasto" aria-pressed="false" title="Falar o gasto">&#127908;</button>
-      <button class="btn" type="submit">Enviar</button>
+      <button class="btn envia" type="submit" aria-label="Enviar">&#10148;</button>
     </form>
-    <p class="leg centro">A frase é interpretada no seu aparelho e o lançamento fica salvo na sua conta. Se usar o microfone, o navegador transcreve a voz com o serviço de voz dele. <button class="link-b" type="button" id="chat-manual">Prefiro preencher um formulário</button></p>
+    <p class="leg centro chat-nota"><span class="nota-txt">A frase é interpretada no seu aparelho e o lançamento fica salvo na sua conta. Se usar o microfone, o navegador transcreve a voz com o serviço de voz dele.</span> <button class="link-b" type="button" id="chat-manual">Prefiro preencher um formulário</button></p>
   </section>
 
   <!-- CATEGORIAS -->
