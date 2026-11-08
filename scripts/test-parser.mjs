@@ -50,5 +50,13 @@ if (P.ehConta("gastei 30 no mercado")) { falhas++; console.log("ehConta falso po
 const l1 = P.interpretarLimite("limite alimentação 800");
 if (!(l1.ok && l1.cat === "Alimentação" && l1.valor === 800)) { falhas++; console.log("limite 1 falhou", l1); }
 if (P.interpretarLimite("limite do cartão 5000").ok) { falhas++; console.log("limite sem categoria deveria falhar"); }
+const pa = P.interpretar("comprei tênis 300 em 3x no cartão Nubank", H);
+if (!(pa.ok && pa.valor === 300 && pa.parcelas === 3 && !pa.valorEhParcela && pa.forma === "Crédito" && pa.banco === "Nubank")) { falhas++; console.log("parcelas 1 falhou", pa); }
+const pb = P.interpretar("geladeira 3x de 100 no cartão Itaú", H);
+if (!(pb.ok && pb.valor === 100 && pb.parcelas === 3 && pb.valorEhParcela)) { falhas++; console.log("parcelas 2 falhou", pb); }
+const pc = P.interpretar("comprei 500 em 10 parcelas de 50", H);
+if (!(pc.ok && pc.valor === 50 && pc.parcelas === 10 && pc.valorEhParcela)) { falhas++; console.log("parcelas 3 falhou", pc); }
+if (P.interpretar("gastei 30 no mercado", H).parcelas !== 1) { falhas++; console.log("sem parcelas falhou"); }
+if (P.interpretar("recebi 3000 em 3x", H).parcelas !== 1) { falhas++; console.log("receita não parcela"); }
 console.log(falhas ? falhas + " falha(s)" : "Parser: todos os testes passaram.");
 process.exit(falhas ? 1 : 0);

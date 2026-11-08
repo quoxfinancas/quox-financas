@@ -44,4 +44,15 @@ eq(L.faturas({ nome: "X", fecha: 25, vence: 5 }, [{ tipo: "despesa", forma: "Cr�
 // metas
 eq(L.porMes({ alvo: 1200, guardado: 0, prazo: "2027-05-07" }, "2026-11-07"), 200, "por mês");
 eq(L.porMes({ alvo: 1000, guardado: 1000, prazo: "2027-05-07" }, "2026-11-07"), null, "meta atingida");
+// parcelamento
+eq(L.parcelar(100, 3, "2026-11-07", false).map(p => [p.data, p.valor]), [["2026-11-07", 33.33], ["2026-12-07", 33.33], ["2027-01-07", 33.34]], "100 em 3x");
+eq(L.parcelar(100, 3, "2026-11-07", true).map(p => p.valor), [100, 100, 100], "3x de 100");
+eq(L.parcelar(1200, 12, "2026-01-31", false).map(p => p.data).slice(0, 3), ["2026-01-31", "2026-02-28", "2026-03-31"], "dia 31 ajusta no fim do mês");
+eq(Math.round(L.parcelar(1000, 7, "2026-11-07", false).reduce((s, p) => s + p.valor, 0) * 100) / 100, 1000, "soma fecha o total");
+eq(L.infoParcela("pab12cd_2_10"), { g: "ab12cd", k: 2, n: 10 }, "info parcela"); eq(L.infoParcela("abc"), null, "não é parcela");
+// parcelas nas faturas: compra dia 15, fecha 10 → 1ª parcela na fatura do mês seguinte
+const par = L.parcelar(300, 3, "2026-11-15", false).map(p => ({ tipo: "despesa", forma: "Crédito", banco: "Nubank", data: p.data, valor: p.valor }));
+const fp = L.faturas({ nome: "Nubank", fecha: 10, vence: 17, pagas: [] }, par, "2026-11-20");
+eq(fp.map(f => [f.ym, f.total]), [["2026-12", 100], ["2027-01", 100], ["2027-02", 100]], "parcelas em faturas diferentes");
+eq(L.limiteUsado(fp), 300, "limite compromete o total da compra");
 console.log(f ? f + " falha(s)" : "Lib: todos os testes passaram."); process.exit(f ? 1 : 0);
