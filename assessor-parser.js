@@ -162,13 +162,17 @@
     else if (banco && tipo === "despesa") { forma = "Crédito"; suposta = true; }
     if (tipo === "receita" && forma === "Crédito") forma = "";
 
+    /* parcelas: "3x", "em 3 vezes", "3 parcelas"; "3x de 100" informa o valor de CADA parcela */
+    var parcelas = 1, ehParcela = false, mp = n.match(/(?:^|[^a-z0-9])(\d{1,2})\s*(?:x|vezes|parcelas?)(?:\s+d[eo]\s*(?:r\$\s*)?\d)?/) || n.match(/parcel(?:ado|ei|amos|ar)\s+(?:em\s+)?(\d{1,2})\b/);
+    if (mp && +mp[1] >= 2 && +mp[1] <= 48 && tipo === "despesa") { parcelas = +mp[1]; ehParcela = /(?:x|vezes|parcelas?)\s+d[eo]\s*(?:r\$\s*)?\d/.test(mp[0]); if (!forma) forma = "Crédito";
+      if (ehParcela) { var mv = n.match(/(?:x|vezes|parcelas?)\s+d[eo]\s*(?:r\$\s*)?(\d[\d.,]*)(\s*mil\b)?/); if (mv) { var vv = parseValor(mv[1]); if (isFinite(vv) && vv > 0) valor = mv[2] && vv < 1000 ? vv * 1000 : vv; } } }
     var dt = acharData(n, hoje);
     if (!desc) {
       var l = bruto.replace(/r\$\s*/ig, "").replace(/\d[\d.,]*/g, " ").replace(/\b(gastei|paguei|comprei|recebi|ganhei|reais|real|hoje|ontem|anteontem|no|na|em|de|do|da|com|cart[aã]o|cr[eé]dito|d[eé]bito|pix|dinheiro|boleto|para|pra|um|uma|o|a|e|x|dia|meu|minha)\b/ig, " ").replace(/\s+/g, " ").trim();
       if (banco) l = l.replace(new RegExp(esc(banco), "ig"), " ").replace(/\s+/g, " ").trim();
       desc = l ? cap(l.slice(0, 40)) : (tipo === "receita" ? "Receita" : "Despesa");
     }
-    return { ok: true, tipo: tipo, valor: Math.round(valor * 100) / 100, cat: cat, desc: desc, forma: forma, banco: banco, data: dt.data, dataExplicita: dt.explicita, dataErro: !!dt.erro, formaSuposta: suposta, semCategoria: !achou };
+    return { ok: true, tipo: tipo, valor: Math.round(valor * 100) / 100, cat: cat, desc: desc, forma: forma, banco: banco, data: dt.data, dataExplicita: dt.explicita, dataErro: !!dt.erro, formaSuposta: suposta, semCategoria: !achou, parcelas: parcelas, valorEhParcela: ehParcela };
   }
 
   /* Separa várias frases (uma por linha ou separadas por ponto e vírgula). */

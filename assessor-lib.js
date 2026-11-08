@@ -121,11 +121,29 @@
   }
   function limiteUsado(fs) { return Math.round(fs.filter(function (f) { return f.estado === "aberta" || f.estado === "fechada" || f.estado === "vencida"; }).reduce(function (s, f) { return s + f.total; }, 0) * 100) / 100; }
 
+
+  /* ---------- parcelamento ---------- */
+  function dataMaisMeses(dataIso, k) {
+    var ym = somaMes(dataIso.slice(0, 7), k); return mesDia(ym, +dataIso.slice(8));
+  }
+  /* Divide uma compra em parcelas mensais. total: valor total (ou de cada parcela, se ehParcela). A última parcela absorve os centavos. */
+  function parcelar(valor, n, dataIso, ehParcela) {
+    var total = Math.round((ehParcela ? valor * n : valor) * 100) / 100, base = Math.floor((total / n) * 100) / 100, out = [], soma = 0, k;
+    if (ehParcela) base = Math.round(valor * 100) / 100;
+    for (k = 0; k < n; k++) {
+      var v = k === n - 1 ? Math.round((total - soma) * 100) / 100 : base;
+      soma += v; out.push({ k: k + 1, n: n, data: dataMaisMeses(dataIso, k), valor: v });
+    }
+    return out;
+  }
+  var RE_PARC = /^p([a-z0-9]{4,12})_(\d{1,2})_(\d{1,2})$/;
+  function infoParcela(id) { var m = RE_PARC.exec(String(id || "")); return m ? { g: m[1], k: +m[2], n: +m[3] } : null; }
+
   /* ---------- metas ---------- */
   function mesesAte(hojeIso, prazo) { var a = +hojeIso.slice(0, 4) * 12 + +hojeIso.slice(5, 7), b = +prazo.slice(0, 4) * 12 + +prazo.slice(5, 7); return Math.max(1, b - a); }
   function porMes(meta, hojeIso) { var falta = meta.alvo - meta.guardado; if (falta <= 0 || !meta.prazo || meta.prazo <= hojeIso) return null; return Math.ceil((falta / mesesAte(hojeIso, meta.prazo)) * 100) / 100; }
 
-  var api = { numero: numero, data: data, lerOFX: lerOFX, lerCSV: lerCSV, lerExtrato: lerExtrato, idImport: idImport, faturas: faturas, faturaDaCompra: faturaDaCompra, limiteUsado: limiteUsado, mesmoCartao: mesmoCartao, mesDia: mesDia, somaMes: somaMes, porMes: porMes, sem: sem };
+  var api = { parcelar: parcelar, dataMaisMeses: dataMaisMeses, infoParcela: infoParcela, numero: numero, data: data, lerOFX: lerOFX, lerCSV: lerCSV, lerExtrato: lerExtrato, idImport: idImport, faturas: faturas, faturaDaCompra: faturaDaCompra, limiteUsado: limiteUsado, mesmoCartao: mesmoCartao, mesDia: mesDia, somaMes: somaMes, porMes: porMes, sem: sem };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.QuoxLib = api;
 })(typeof window !== "undefined" ? window : globalThis);

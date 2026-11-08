@@ -249,13 +249,26 @@
     var cats = tipo === "receita" ? CATS_R : CATS_D;
     $("l-cat").innerHTML = cats.map(function (c) { return '<option value="' + esc(c) + '"' + (c === sel ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("");
   }
+  function criarParcelas(base, n, ehParcela) {
+    var g = Math.random().toString(36).slice(2, 9), nome = (base.desc || base.cat).slice(0, 60);
+    return window.QuoxLib.parcelar(base.valor, n, base.data, ehParcela).map(function (p) {
+      return { id: "p" + g + "_" + p.k + "_" + p.n, tipo: "despesa", valor: p.valor, cat: base.cat, data: p.data, desc: nome + " (" + p.k + "/" + p.n + ")", forma: base.forma || "Crédito", banco: base.banco || "" };
+    });
+  }
+  function excluirParcelas(id) {
+    var i = window.QuoxLib.infoParcela(id); if (!i) return excluirLanc(id);
+    var antes = estado.lanc.length;
+    estado.lanc = estado.lanc.filter(function (x) { var j = window.QuoxLib.infoParcela(x.id); return !(j && j.g === i.g); });
+    salvar(); toast((antes - estado.lanc.length) + " parcelas excluídas"); render();
+  }
   function itemLanc(l, acoes) {
     return '<div class="item"><div class="l"><b>' + esc(l.desc || l.cat) + "</b><small>" + esc(l.cat) + " · " + l.data.split("-").reverse().join("/") + (l.tipo === "despesa" && (l.forma || l.banco) ? " · " + esc(pagLabel(l)) : "") + "</small>" +
-      (acoes ? '<div class="acs"><button class="mini-b" data-ed="' + esc(l.id) + '" type="button">Editar</button><button class="mini-b perigo" data-del="' + esc(l.id) + '" type="button">Excluir</button></div>' : "") +
+      (acoes ? '<div class="acs"><button class="mini-b" data-ed="' + esc(l.id) + '" type="button">Editar</button><button class="mini-b perigo" data-del="' + esc(l.id) + '" type="button">Excluir</button>' + (window.QuoxLib.infoParcela(l.id) ? '<button class="mini-b perigo" data-delp="' + esc(l.id) + '" type="button">Excluir todas as parcelas</button>' : "") + '</div>' : "") +
       '</div><div class="v ' + (l.tipo === "receita" ? "pos" : "neg") + '">' + (l.tipo === "receita" ? "+" : "−") + R(l.valor) + "</div></div>";
   }
   function ligarAcoes(raiz) {
     raiz.querySelectorAll("[data-ed]").forEach(function (b) { b.addEventListener("click", function () { iniciarEdicao(b.getAttribute("data-ed")); }); });
+    raiz.querySelectorAll("[data-delp]").forEach(function (b) { duplo(b, "Confirmar?", function () { excluirParcelas(b.getAttribute("data-delp")); }); });
     raiz.querySelectorAll("[data-del]").forEach(function (b) { duplo(b, "Confirmar?", function () { excluirLanc(b.getAttribute("data-del")); }); });
   }
   function ordenar(lista) { return lista.slice().sort(function (a, b) { return a.data < b.data ? 1 : a.data > b.data ? -1 : 0; }); }
@@ -275,11 +288,12 @@
     document.querySelector('input[name="tipo"][value="' + l.tipo + '"]').checked = true;
     preencherCats(l.tipo, l.cat);
     $("l-valor").value = String(l.valor).replace(".", ",");
+    $("l-parc-box").hidden = true;
     $("l-data").value = l.data; $("l-desc").value = l.desc; $("l-forma").value = l.forma || ""; $("l-banco").value = l.banco || "";
     $("f-titulo").textContent = "Editar lançamento"; $("l-salvar").textContent = "Salvar alterações"; $("l-cancel").hidden = false;
   }
   function fimEdicao() {
-    editLanc = null; $("l-valor").value = ""; $("l-desc").value = ""; $("l-banco").value = ""; $("l-forma").value = ""; $("l-data").value = hoje();
+    editLanc = null; $("l-parc-box").hidden = false; $("l-parc").value = "1"; $("l-parc-cada").checked = false; $("l-valor").value = ""; $("l-desc").value = ""; $("l-banco").value = ""; $("l-forma").value = ""; $("l-data").value = hoje();
     $("f-titulo").textContent = "Novo lançamento"; $("l-salvar").textContent = "Salvar"; $("l-cancel").hidden = true; $("l-erro").textContent = "";
   }
   function excluirLanc(id) { estado.lanc = estado.lanc.filter(function (x) { return x.id !== id; }); salvar(); toast("Lançamento excluído"); render(); }
@@ -340,9 +354,10 @@
   }
   function rolarChat() { setTimeout(function () { var f = $("chat-form"); if (f && f.scrollIntoView) f.scrollIntoView({ block: "end" }); }, 30); }
   function desfazerChat(id) {
-    estado.lanc = estado.lanc.filter(function (l) { return l.id !== id; });
+    var ip = window.QuoxLib.infoParcela(id);
+    estado.lanc = estado.lanc.filter(function (l) { var j = ip && window.QuoxLib.infoParcela(l.id); return ip ? !(j && j.g === ip.g) : l.id !== id; });
     estado.chat.forEach(function (m) { if (m.id === id) m.id = ""; });
-    pushChat("bot", "Pronto, desfiz esse lançamento."); salvar(); renderChat(); rolarChat();
+    pushChat("bot", ip ? "Pronto, desfiz a compra e as " + ip.n + " parcelas." : "Pronto, desfiz esse lançamento."); salvar(); renderChat(); rolarChat();
   }
   function descreverLanc(l) {
     var pg = l.tipo === "despesa" && (l.forma || l.banco) ? " · " + pagLabel(l) : "";
@@ -353,14 +368,19 @@
     var r = PA.interpretar(frase, new Date());
     if (!r.ok) return { texto: r.erro === "sem-valor" ? "Não achei o valor em \"" + frase + "\". Inclua o número, por exemplo: gastei 30 no mercado no cartão Nubank." : "Não consegui entender essa frase.", id: "" };
     var l = { id: uid(), tipo: r.tipo, valor: r.valor, cat: r.cat, data: r.data, desc: r.desc.slice(0, 80), forma: r.forma, banco: r.banco };
-    var antesOrc = gastoCat(l.cat, l.data.slice(0, 7));
-    estado.lanc.push(l);
+    var antesOrc = gastoCat(l.cat, l.data.slice(0, 7)), ps = null;
+    if (r.parcelas > 1 && r.tipo === "despesa") { ps = criarParcelas(l, r.parcelas, r.valorEhParcela); l = ps[0]; ps.forEach(function (p) { estado.lanc.push(p); }); }
+    else estado.lanc.push(l);
     var nota = "";
     var ao = avisoOrc(l, antesOrc); if (ao) nota += "\n" + ao;
     if (r.formaSuposta) nota += "\nVi um banco e considerei cartão de crédito. Se foi débito ou Pix, toque em Editar.";
     if (r.semCategoria) nota += "\nNão reconheci a categoria e coloquei em Outros. Toque em Editar para mudar.";
     if (r.dataErro) nota += "\nNão entendi a data, então usei hoje.";
     if (r.tipo === "despesa" && !r.forma && !r.banco) nota += "\nSe quiser registrar o cartão ou banco, escreva junto, por exemplo: \"no cartão Nubank\".";
+    if (ps) {
+      var tot = ps.reduce(function (t, p) { return t + p.valor; }, 0);
+      return { texto: "Anotei a compra parcelada! " + R(tot) + " em " + ps.length + "x de " + R(ps[0].valor) + " em " + l.cat + (r.banco ? " · " + r.banco : "") + ". A 1ª parcela entra em " + l.data.split("-").reverse().join("/") + " e a última em " + ps[ps.length - 1].data.split("-").reverse().join("/") + ". Para desfazer tudo, escreva \"desfazer\"." + nota, id: l.id };
+    }
     return { texto: "Anotei! " + descreverLanc(l) + nota, id: l.id };
   }
   function respostaResumo() {
@@ -503,6 +523,15 @@
     if (!isFinite(v) || v <= 0) { err.textContent = "Informe um valor maior que zero, por exemplo 49,90."; $("l-valor").focus(); return; }
     if (!dataValida(data)) { err.textContent = "Escolha uma data válida."; return; }
     err.textContent = "";
+    var np = Math.round(+String($("l-parc").value).replace(",", ".")) || 1;
+    if (!editLanc && tipo === "despesa" && np > 1) {
+      if (np > 48) { err.textContent = "O máximo é 48 parcelas."; return; }
+      var base = { valor: Math.round(v * 100) / 100, cat: $("l-cat").value, data: data, desc: $("l-desc").value.trim().slice(0, 60), forma: $("l-forma").value || "Crédito", banco: $("l-banco").value.trim().slice(0, 30) };
+      var psf = criarParcelas(base, np, $("l-parc-cada").checked), antesP = gastoCat(base.cat, data.slice(0, 7));
+      psf.forEach(function (p) { estado.lanc.push(p); });
+      var avP = avisoOrc(psf[0], antesP);
+      salvar(); fimEdicao(); toast("Compra parcelada salva em " + np + "x" + (avP ? ". " + avP : "")); renderLancar(); return;
+    }
     var reg = { id: editLanc || uid(), tipo: tipo, valor: Math.round(v * 100) / 100, cat: $("l-cat").value, data: data, desc: $("l-desc").value.trim().slice(0, 80), forma: $("l-forma").value, banco: $("l-banco").value.trim().slice(0, 30) };
     var antesOrc = gastoCat(reg.cat, reg.data.slice(0, 7)), avOrc = "";
     if (editLanc) estado.lanc = estado.lanc.map(function (x) { return x.id === editLanc ? reg : x; }); else { estado.lanc.push(reg); avOrc = avisoOrc(reg, antesOrc); }
@@ -521,6 +550,13 @@
     var d = { id: editDiv || uid(), nome: nome.slice(0, 40), saldo: s, juros: j, parcela: p };
     if (editDiv) estado.dividas = estado.dividas.map(function (x) { return x.id === editDiv ? d : x; }); else estado.dividas.push(d);
     salvar(); fimEdicaoDiv(); render(); toast("Dívida salva");
+  }
+  function exportarXlsx(tudo) {
+    var l = estado.lanc.filter(function (x) { return tudo === true || x.data.slice(0, 7) === mes; });
+    if (!l.length) { $("b-msg").textContent = "Não há lançamentos para exportar nesse período."; return; }
+    if (!window.QuoxXlsx) { $("b-msg").textContent = "Não consegui carregar o gerador de planilha. Recarregue a página."; return; }
+    salvarArquivo("quox-financas-" + (tudo === true ? "completo" : mes) + ".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", window.QuoxXlsx.gerar(window.QuoxXlsx.planilhasQuox(l, { hoje: hoje() })));
+    $("b-msg").textContent = "Planilha Excel gerada com 4 abas: lançamentos, resumo mensal, gastos por categoria e parcelas futuras (com fórmulas).";
   }
   function salvarArquivo(nome, tipo, txt) {
     var b = new Blob([txt], { type: tipo }), u = URL.createObjectURL(b), a = document.createElement("a");
@@ -979,6 +1015,8 @@
   $("p-extra").addEventListener("input", renderPlano);
   $("p-met").addEventListener("change", renderPlano);
   $("b-print").addEventListener("click", function () { window.print(); });
+  $("b-xlsx").addEventListener("click", function () { exportarXlsx(false); });
+  $("b-xlsx-tudo").addEventListener("click", function () { exportarXlsx(true); });
   $("b-csv").addEventListener("click", function () { exportarCsv(false); });
   $("b-csv-tudo").addEventListener("click", function () { exportarCsv(true); });
   $("b-backup").addEventListener("click", backup);

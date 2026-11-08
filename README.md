@@ -133,3 +133,9 @@ A aba **Planejar** reúne contas a pagar (com aviso no topo do app), limites por
 - **Mais:** Categorias, Dívidas, Metas, Importar extrato (OFX/CSV) e Conta compartilhada.
 - **Banco de dados:** rode `supabase/schema-fase2.sql` no SQL Editor (depois do `schema-assessor.sql`) para ativar a conta compartilhada. Os cartões e as metas usam a tabela `assessor_extra`, que já existe.
 - **Testes:** `node scripts/test-parser.mjs` e `node scripts/test-lib.mjs`.
+
+## Compras parceladas e Excel
+
+- **Parcelas:** no chat, escreva "comprei tênis 300 em 3x no cartão Nubank" ou "geladeira 3x de 100 no Itaú". No formulário use o campo *Parcelas*. Cada parcela vira um lançamento no mês certo (e na fatura certa do cartão); a última absorve os centavos. "Excluir todas as parcelas" e "desfazer" removem a compra inteira.
+- **Excel (.xlsx):** aba Relatório → "Baixar Excel". Gera 4 abas (Lançamentos, Resumo mensal, Por categoria, Parcelas futuras) com fórmulas. Arquivo `assessor-xlsx.js`, sem bibliotecas externas.
+- Não há SQL novo. Cache do app: `quox-v7`.

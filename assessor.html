@@ -109,6 +109,10 @@
         <label>Banco ou cartão<input id="l-banco" maxlength="30" list="bancos-dl" autocomplete="off" placeholder="Ex.: Nubank"></label>
       </div>
       <datalist id="bancos-dl"></datalist>
+      <div id="l-parc-box" class="grid2">
+        <label>Parcelas (só despesas)<input id="l-parc" type="number" min="1" max="48" value="1" inputmode="numeric"></label>
+        <label class="chk"><input id="l-parc-cada" type="checkbox"><span>O valor informado é de cada parcela</span></label>
+      </div>
       <label>Descrição (opcional)<input id="l-desc" maxlength="80" autocomplete="off" placeholder="Ex.: mercado, aluguel, salário"></label>
       <p class="erro-t" id="l-erro" role="alert"></p>
       <div class="linha"><button class="btn" type="submit" id="l-salvar">Salvar</button><button class="btn sec" type="button" id="l-cancel" hidden>Cancelar edição</button></div>
@@ -206,7 +210,7 @@
       <div class="linha"><button class="btn" type="submit">Salvar cartão</button><button class="btn sec" type="button" id="car-cancel" hidden>Cancelar edição</button></div>
     </form>
     <div id="car-lista"></div>
-    <p class="leg centro">Compras parceladas aparecem inteiras na fatura em que foram lançadas. Pagar a fatura não gera nova despesa, porque as compras já foram contadas quando você as lançou.</p>
+    <p class="leg centro">Compras parceladas viram uma parcela por mês, cada uma na fatura certa, e o limite do cartão fica comprometido pelo valor total até você pagar as faturas. Pagar a fatura não gera nova despesa, porque as compras já foram contadas quando você as lançou.</p>
   </section>
 
   <!-- METAS -->
@@ -285,6 +289,8 @@
       <h2>Seus dados</h2>
       <div class="linha wrap-l">
         <button class="btn" type="button" id="b-print">Imprimir ou salvar em PDF</button>
+        <button class="btn" type="button" id="b-xlsx">Baixar Excel (.xlsx) do mês</button>
+        <button class="btn" type="button" id="b-xlsx-tudo">Baixar Excel (.xlsx) de tudo</button>
         <button class="btn sec" type="button" id="b-csv">Exportar mês (planilha)</button>
         <button class="btn sec" type="button" id="b-csv-tudo">Exportar tudo (planilha)</button>
         <button class="btn sec" type="button" id="b-backup">Fazer backup (arquivo)</button>
@@ -310,6 +316,7 @@
 <script src="config.js"></script>
 <script src="assessor-parser.js"></script>
 <script src="assessor-lib.js"></script>
+<script src="assessor-xlsx.js"></script>
 <script src="assessor.js"></script>
 <script src="assessor-extras.js"></script>
 <script src="site.js"></script>
