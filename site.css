@@ -66,4 +66,17 @@ a.card:hover{border-color:var(--accent)}
 .legal p,.legal li{font-size:.97rem}
 .legal .meta{color:var(--muted);font-size:.88rem;margin:0 0 12px}
 
-.hero .hero-conta{margin:20px 0 0;font-size:.98rem}.hero .hero-conta .btn{padding:8px 16px;margin:0 8px 0 6px}.hero .hero-conta a:not(.btn){color:#5fd4e8}
+
+
+.conta-box{margin-top:22px;max-width:420px;background:#fff;color:var(--ink);border-radius:14px;padding:18px 20px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.conta-box h2{margin:0 0 8px;font-size:1.2rem}.conta-box p{color:var(--muted);margin:0 0 10px;font-size:.95rem;max-width:none}
+.conta-box label{display:block;font-size:.88rem;font-weight:600;margin:0 0 10px}
+.conta-box input[type=text],.conta-box input[type=email],.conta-box input[type=password],.conta-box input[type=tel],.conta-box input:not([type]){display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:1rem}
+.conta-box label.opt{display:flex;gap:8px;font-weight:400;font-size:.8rem}
+.conta-box .btn{width:100%;text-align:center;margin-top:6px;box-sizing:border-box}
+.conta-box .btn.sec{color:var(--accent);border-color:var(--accent)}
+.conta-box .acoes{display:grid;gap:8px}
+.conta-box .mini{display:flex;justify-content:space-between;gap:10px;margin-top:10px}
+.conta-box .link{background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;font-size:.9rem;padding:0}
+.conta-box .erro{color:var(--bad);font-weight:600;min-height:1em}.conta-box .hero-conta .btn{width:auto;display:inline-block;padding:8px 16px;margin:6px 8px 0 0}
+.hero .hero-conta a:not(.btn){color:var(--accent)}
