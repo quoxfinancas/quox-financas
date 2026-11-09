@@ -5,7 +5,8 @@
     ["home", "./", "Início"],
     ["artigos", "artigos.html", "Artigos"],
     ["simulador", "simulador.html", "Simulador de investimentos"],
-    ["assessor", "assessor.html", "Assessor financeiro"]
+    ["assessor", "assessor.html", "Assessor financeiro"],
+    ["sites", "sites-para-empresas.html", "Sites para empresas"]
   ];
   var legais = [
     ["termos", "termos.html", "Termos de uso"],

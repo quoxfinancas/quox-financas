@@ -83,3 +83,30 @@ a.card:hover{border-color:var(--accent)}
 .conta-page{min-height:60vh;display:flex;justify-content:center;align-items:flex-start;padding:36px 0}.conta-page .conta-box{margin:0;width:100%;box-shadow:0 2px 14px rgba(8,26,33,.12);border:1px solid var(--line)}
 .pref-email{margin:14px 0 6px;padding-top:12px;border-top:1px solid var(--line)}
 .conta-box label.opt input{margin-top:3px}
+
+/* página Sites para empresas */
+.hero-bt{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.pacotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:12px 0}
+.pacote{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:6px}
+.pacote.destaque{border:2px solid var(--accent);box-shadow:0 6px 24px rgba(11,122,148,.14)}
+.pacote h3{margin:0;font-size:1.2rem}
+.selo{position:absolute;top:-12px;right:16px;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px}
+.preco{margin:4px 0 0;font-size:2rem;font-weight:800;color:var(--accent);line-height:1.1}.preco small{display:block;font-size:.8rem;font-weight:500;color:var(--muted)}
+ul.ok{list-style:none;padding:0;margin:10px 0 16px;display:grid;gap:8px}
+ul.ok li{padding-left:26px;position:relative;font-size:.95rem}
+ul.ok li::before{content:"✓";position:absolute;left:0;color:var(--ok);font-weight:800}
+.pacote .btn{margin-top:auto;text-align:center}
+.passos-sites{list-style:none;counter-reset:p;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.passos-sites li{counter-increment:p;background:var(--soft);border-radius:12px;padding:14px 14px 14px 52px;position:relative;display:flex;flex-direction:column;gap:2px}
+.passos-sites li::before{content:counter(p);position:absolute;left:14px;top:14px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.passos-sites span{color:var(--muted);font-size:.92rem}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+.faq summary{cursor:pointer;font-weight:600}.faq p{margin:8px 0 2px;color:var(--muted)}
+.orc-wrap{max-width:560px;margin-bottom:32px}
+.orc-form,.orc-ok{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.orc-form label{display:block;font-size:.9rem;font-weight:600;margin:0 0 12px}
+.orc-form input:not([type=checkbox]),.orc-form select,.orc-form textarea{display:block;width:100%;margin-top:4px;padding:10px 12px;font:inherit;font-size:16px;border:1px solid #bcd9e3;border-radius:8px;background:#fff;color:var(--ink);box-sizing:border-box}
+.orc-form label.opt{display:flex;gap:10px;align-items:flex-start;font-weight:400}.orc-form label.opt input{margin-top:3px;width:20px;height:20px;flex:none}
+.o-mel{position:absolute;left:-9999px;height:0;overflow:hidden}
+.orc-zap{margin-top:14px}.orc-zap p{margin:0 0 6px}
+.erro-t{color:var(--bad);min-height:1.2em;margin:0 0 8px}
