@@ -180,3 +180,4 @@ body.ap-chat{overflow:hidden;overscroll-behavior:none}
 .pagar-d{display:flex;gap:8px;align-items:center;margin:-4px 0 12px;padding:0 4px}
 .pagar-d input{flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .barra .fill.perdeu{background:var(--bad)}
+.opt-email{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.92rem;cursor:pointer}.opt-email input{margin-top:4px;width:20px;height:20px;flex:none}.opt-email small{color:var(--muted)}

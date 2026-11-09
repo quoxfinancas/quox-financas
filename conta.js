@@ -32,23 +32,8 @@ function msgs(){return'<p id="a-erro" class="erro" role="alert"></p><p id="a-ok"
 function erro(t){$("a-erro").textContent=t||"";}
 function mostrar(n){tela=n;box.innerHTML=T[n]+msgs();ligar()}
 function logado(nome){
- box.innerHTML='<h2>Olá, '+esc(nome)+'!</h2><p>Você está conectado. Escolha por onde quer continuar:</p><div class="acoes"><a class="btn" href="simulador.html">Simulador de investimentos</a><a class="btn" href="assessor.html">Assessor financeiro</a></div><div class="pref-email"><label class="opt"><input type="checkbox" id="c-semanal" disabled><span><strong>Receber o resumo semanal por e-mail</strong><br>Um e-mail curto por semana com quanto entrou, quanto saiu e uma dica. Você cancela quando quiser.</span></label><p class="note" id="c-semanal-msg" role="status"></p></div><div class="mini"><button class="link" type="button" id="c-sair">Sair da conta</button></div>';
- prefEmail();
+ box.innerHTML='<h2>Olá, '+esc(nome)+'!</h2><p>Você está conectado. Escolha por onde quer continuar:</p><div class="acoes"><a class="btn" href="simulador.html">Simulador de investimentos</a><a class="btn" href="assessor.html">Assessor financeiro</a></div><div class="mini"><button class="link" type="button" id="c-sair">Sair da conta</button></div>';
  $("c-sair").addEventListener("click",function(){sb.auth.signOut().then(function(){decidir(null)},function(){decidir(null)})})}
-function prefEmail(){
- var cx=$("c-semanal"),mg=$("c-semanal-msg");if(!cx||!user)return;
- sb.from("email_prefs").select("semanal").eq("user_id",user.id).maybeSingle().then(function(r){
-  if(r.error){cx.closest(".pref-email").hidden=true;return}
-  cx.checked=!!(r.data&&r.data.semanal);cx.disabled=false},function(){cx.closest(".pref-email").hidden=true});
- cx.addEventListener("change",function(){
-  var on=cx.checked;cx.disabled=true;mg.textContent="";
-  var agora=new Date().toISOString(),dados={semanal:on,consentido_em:on?agora:null,atualizado_em:agora};
-  sb.from("email_prefs").update(dados).eq("user_id",user.id).select("user_id").then(function(r){
-   if(r.error||(r.data&&r.data.length))return r;
-   dados.user_id=user.id;return sb.from("email_prefs").insert(dados)}).then(function(r){
-   cx.disabled=false;
-   if(r.error){cx.checked=!on;mg.textContent="Não foi possível salvar ("+(r.error.message||r.error.code||"erro")+"). Se persistir, rode de novo o arquivo schema-email.sql no Supabase.";return}
-   mg.textContent=on?"Ativado. O primeiro e-mail chega em até 7 dias, para "+(user.email||"o seu e-mail")+".":"Desativado. Você não vai mais receber o resumo."},function(){cx.disabled=false;cx.checked=!on;mg.textContent="Sem conexão. Tente novamente."})})}
 function ligar(){
  var q=function(s,f){var e=box.querySelectorAll(s);Array.prototype.forEach.call(e,f)};
  q("[data-ir]",function(b){b.addEventListener("click",function(){mostrar(b.getAttribute("data-ir"))})});

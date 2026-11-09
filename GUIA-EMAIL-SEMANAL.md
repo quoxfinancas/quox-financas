@@ -92,7 +92,7 @@ Invoke-RestMethod -Method Post -Uri "https://mjospmioycadvccqlyty.supabase.co/fu
 - Erro `401`: o segredo do cabeçalho não bate com o `CRON_SECRET`. Erro `500` dizendo que falta configuração: faltou cadastrar `CRON_SECRET` (mínimo de 16 caracteres) ou `RESEND_API_KEY` no B4.
 
 **C4. Testar o "parar de receber"**
-Clique no link no fim do e-mail, confirme na página, depois abra sua conta (`/conta.html`) e veja a opção desligada.
+Clique no link no fim do e-mail, confirme na página, depois abra o assessor, aba Resumo, e veja a caixa desligada.
 
 ---
 
@@ -114,11 +114,11 @@ Clique no link no fim do e-mail, confirme na página, depois abra sua conta (`/c
 ## D) Subir os arquivos do site no GitHub
 
 No repositório `quoxfinancas/quox-financas`: **Add file** → **Upload files**, arraste e faça o commit dos arquivos que estão na raiz deste pacote:
-`conta.js`, `site.css`, `cancelar-email.html`, `privacidade.html`.
+`assessor-fase3.js`, `assessor.css`, `conta.js`, `site.css`, `cancelar-email.html`, `privacidade.html`.
 
 Não precisa subir nada da pasta `supabase` nem `scripts` (elas servem só para você colar no Supabase, e os testes ficam como referência). Se quiser guardar tudo no GitHub, pode subir, desde que o SQL do agendamento esteja **sem** o segredo.
 
-Depois do deploy, entre em **Minha conta** (menu do site): aparece a caixa "Receber o resumo semanal por e-mail".
+Depois do deploy, abra o assessor, vá na aba **Resumo**: no card "Sua semana" aparece a caixa "Receber este resumo por e-mail toda semana".
 
 ---
 

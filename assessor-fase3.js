@@ -72,12 +72,44 @@
     if (r.dias < 4) return "Você anotou em " + r.dias + " dos 7 dias. Quanto mais constante, mais fiéis ficam o resumo e as dicas.";
     return "Semana equilibrada. Continue anotando todo dia para manter o quadro completo.";
   }
+  /* e-mail semanal: a escolha fica na tabela email_prefs (ver supabase/schema-email.sql) */
+  var pref = { uid: null, carregado: false, on: false, msg: "", ocupado: false };
+  function carregarPref() {
+    var u = A.user && A.user(), sb = A.sb && A.sb();
+    if (!u || !sb) return;
+    if (pref.uid === u.id) return;
+    pref = { uid: u.id, carregado: false, on: false, msg: "", ocupado: false };
+    sb.from("email_prefs").select("semanal").eq("user_id", u.id).maybeSingle().then(function (r) {
+      if (pref.uid !== u.id) return;
+      pref.carregado = true; pref.erro = !!r.error; pref.on = !!(r.data && r.data.semanal); renderSemana();
+    }, function () { pref.carregado = true; pref.erro = true; renderSemana(); });
+  }
+  function salvarPref(on) {
+    var u = A.user(), sb = A.sb(), agora = new Date().toISOString(), dados = { semanal: on, consentido_em: on ? agora : null, atualizado_em: agora };
+    pref.ocupado = true; pref.msg = ""; renderSemana();
+    sb.from("email_prefs").update(dados).eq("user_id", u.id).select("user_id").then(function (r) {
+      if (r.error || (r.data && r.data.length)) return r;
+      dados.user_id = u.id; return sb.from("email_prefs").insert(dados);
+    }).then(function (r) {
+      pref.ocupado = false;
+      if (r.error) { pref.msg = "Não foi possível salvar (" + (r.error.message || r.error.code || "erro") + "). Se persistir, rode de novo o arquivo schema-email.sql no Supabase."; }
+      else { pref.on = on; pref.msg = on ? "Ativado. O primeiro e-mail chega em até 7 dias, para " + (u.email || "o seu e-mail") + "." : "Desativado. Você não vai mais receber o resumo."; }
+      renderSemana();
+    }, function () { pref.ocupado = false; pref.msg = "Sem conexão. Tente novamente."; renderSemana(); });
+  }
+  function blocoEmail() {
+    if (!A.user || !A.user() || !A.sb || !A.sb()) return "";
+    carregarPref();
+    if (!pref.carregado || pref.erro) return "";
+    return '<label class="opt-email"><input type="checkbox" id="sem-email"' + (pref.on ? " checked" : "") + (pref.ocupado ? " disabled" : "") + '><span><strong>Receber este resumo por e-mail toda semana</strong><br><small>Um e-mail curto, no mesmo dia da semana. Você cancela quando quiser, aqui ou pelo link no e-mail.</small></span></label>' + (pref.msg ? '<p class="sub" id="sem-email-msg" role="status" style="margin:6px 0 0">' + E(pref.msg) + "</p>" : "");
+  }
   function renderSemana() {
     var el = $("sem-res"); if (!el) return;
     var r = L.resumoSemana(est().lanc, A.hoje());
     el.innerHTML = '<p class="sub" style="margin-top:0">' + dmy(r.ini) + " a " + dmy(r.fim) + '</p><div class="kpis" style="margin-bottom:8px"><div class="kpi"><span>Entrou</span><b class="pos">' + R(r.rec) + '</b></div><div class="kpi"><span>Saiu</span><b class="neg">' + R(r.desp) + "</b></div></div>" +
       '<p style="margin:6px 0">' + (r.delta == null ? "Sem gastos na semana anterior para comparar." : "Gastos " + (r.delta >= 0 ? "<strong>" + Math.round(r.delta) + "% acima</strong>" : "<strong>" + Math.round(-r.delta) + "% abaixo</strong>") + " da semana anterior (" + R(r.despAnt) + ").") + (r.top ? " Maior gasto: <strong>" + E(r.top[0]) + "</strong> (" + R(r.top[1]) + ")." : "") + "</p>" +
-      '<p style="margin:6px 0">' + E(conselho(r)) + '</p><button class="mini-b" type="button" id="sem-comp">Compartilhar resumo</button>';
+      '<p style="margin:6px 0">' + E(conselho(r)) + '</p><button class="mini-b" type="button" id="sem-comp">Compartilhar resumo</button>' + blocoEmail();
+    var cx = $("sem-email"); if (cx) cx.addEventListener("change", function () { salvarPref(cx.checked); });
     $("sem-comp").addEventListener("click", function () {
       var tx = textoSemana(r);
       if (navigator.share) navigator.share({ text: tx }).catch(function () {});
