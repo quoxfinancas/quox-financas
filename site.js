@@ -4,7 +4,7 @@
   var inicio = [["home", "./", "Início"], ["artigos", "artigos.html", "Artigos"]];
   var apps = [
     ["simulador", "simulador.html", "Simulador de investimentos"],
-    ["assessor", "assessor.html", "Assessor financeiro"],
+    ["assessor", "assessor.html", "Prumo, assessor financeiro"],
     ["valuation", "valuation.html", "Valuation de empresas"]
   ];
   var sites = [["sites", "sites-para-empresas.html", "Sites para empresas"]];

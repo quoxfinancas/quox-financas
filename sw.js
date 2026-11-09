@@ -1,7 +1,7 @@
 // Service worker do QUOX - Finanças: deixa o site e o assessor abrirem sem internet.
 // Rede primeiro (para sempre mostrar a versão mais nova); cache só como reserva.
-const CACHE = "quox-v11";
-const BASICO = ["./", "artigos.html", "simulador.html", "assessor.html", "assessor.js", "assessor-parser.js", "assessor-lib.js", "assessor-xlsx.js", "assessor-extras.js", "assessor-fase3.js", "push-config.js", "assessor.css", "nav.css", "valuation.css", "valuation-lib.js", "valuation.html", "site.css", "site.js", "config.js", "manifest.webmanifest", "manifest-assessor.webmanifest", "icon-192.png", "icon-512.png"];
+const CACHE = "quox-v12";
+const BASICO = ["./", "artigos.html", "simulador.html", "assessor.html", "assessor.js", "assessor-parser.js", "assessor-lib.js", "assessor-xlsx.js", "assessor-extras.js", "assessor-fase3.js", "push-config.js", "assessor.css", "nav.css", "valuation.css", "valuation-lib.js", "valuation.html", "site.css", "site.js", "config.js", "manifest.webmanifest", "manifest-assessor.webmanifest", "icon-192.png", "icon-512.png", "prumo-192.png", "prumo-512.png"];
 
 self.addEventListener("install", (e) => {
   // cada arquivo é guardado separadamente: se um faltar, os outros continuam
@@ -36,9 +36,9 @@ self.addEventListener("fetch", (e) => {
 self.addEventListener("push", (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { corpo: e.data ? e.data.text() : "" }; }
-  const titulo = String(d.titulo || "QUOX Assessor").slice(0, 80);
+  const titulo = String(d.titulo || "Prumo").slice(0, 80);
   e.waitUntil(self.registration.showNotification(titulo, {
-    body: String(d.corpo || "").slice(0, 200), icon: "icon-192.png", badge: "icon-192.png",
+    body: String(d.corpo || "").slice(0, 200), icon: "prumo-192.png", badge: "prumo-192.png",
     tag: String(d.tag || "quox"), data: { url: typeof d.url === "string" && d.url.indexOf("assessor.html") === 0 ? d.url : "assessor.html" },
   }));
 });

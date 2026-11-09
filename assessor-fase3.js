@@ -181,7 +181,7 @@
     gravarPush(push.sub).then(function (r) { push.msg = r && r.error ? "Não foi possível salvar (" + (r.error.message || "erro") + ")." : "Preferências salvas."; renderPush(); });
   }
   function testarLocal() {
-    regPronto().then(function (reg) { return reg.showNotification("Teste do QUOX", { body: "Se você viu isto, o celular está liberando notificações para o app.", icon: "icon-192.png", tag: "teste-local" }); }).then(function () { push.msg = "Enviei uma notificação de teste para este aparelho."; renderPush(); }, function () { push.msg = "Não consegui mostrar a notificação. Verifique as permissões do celular."; renderPush(); });
+    regPronto().then(function (reg) { return reg.showNotification("Teste do Prumo", { body: "Se você viu isto, o celular está liberando notificações para o app.", icon: "icon-192.png", tag: "teste-local" }); }).then(function () { push.msg = "Enviei uma notificação de teste para este aparelho."; renderPush(); }, function () { push.msg = "Não consegui mostrar a notificação. Verifique as permissões do celular."; renderPush(); });
   }
   function renderPush() {
     var el = $("push-corpo"); if (!el) return;

@@ -1,6 +1,6 @@
 {
-  "name": "QUOX Assessor Financeiro",
-  "short_name": "QUOX Assessor",
+  "name": "Prumo - assessor financeiro da QUOX",
+  "short_name": "Prumo",
   "description": "Lance seus gastos e receitas, veja o relatório do mês e receba dicas para controlar o dinheiro e sair das dívidas.",
   "lang": "pt-BR",
   "id": "assessor",
@@ -15,19 +15,19 @@
   ],
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "prumo-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "prumo-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-maskable-512.png",
+      "src": "prumo-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -49,7 +49,7 @@
       "url": "assessor.html?aba=chat&foco=1",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "prumo-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -61,7 +61,7 @@
       "url": "assessor.html?aba=resumo",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "prumo-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -73,7 +73,7 @@
       "url": "assessor.html?aba=extrato",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "prumo-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }

@@ -184,3 +184,5 @@ body.ap-chat{overflow:hidden;overscroll-behavior:none}
 .pedido-bt{display:flex;gap:8px;margin-top:8px}.pedido-bt .btn{padding:8px 16px;min-height:40px}
 .passos{padding-left:1.2rem;margin:8px 0}.passos li{margin:6px 0}code{background:var(--soft);padding:1px 5px;border-radius:5px;word-break:break-all}
 .opt-email select{width:auto;display:inline-block;margin:0 4px;padding:4px 8px;font-size:16px}
+
+.ap-marca{display:flex;align-items:center;gap:10px;margin:0}.ap-marca img{border-radius:10px;display:block}
