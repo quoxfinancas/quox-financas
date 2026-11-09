@@ -10,10 +10,74 @@
   "orientation": "portrait",
   "background_color": "#f4fafd",
   "theme_color": "#ffffff",
-  "categories": ["finance"],
+  "categories": [
+    "finance"
+  ],
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "share_target": {
+    "action": "assessor.html",
+    "method": "GET",
+    "params": {
+      "title": "t",
+      "text": "l",
+      "url": "u"
+    }
+  },
+  "shortcuts": [
+    {
+      "name": "Anotar gasto",
+      "short_name": "Anotar",
+      "url": "assessor.html?aba=chat&foco=1",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Ver resumo",
+      "short_name": "Resumo",
+      "url": "assessor.html?aba=resumo",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Extrato",
+      "short_name": "Extrato",
+      "url": "assessor.html?aba=extrato",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

@@ -62,6 +62,7 @@
   <!-- CHAT -->
   <section class="tab" id="t-chat">
     <div class="chat-lista" id="chat-lista" aria-live="polite"></div>
+    <div class="aviso" id="pedido-bar" hidden role="alert"><strong>Lançar agora?</strong> <span id="pedido-txt"></span><div class="pedido-bt"><button class="btn" type="button" id="pedido-ok">Lançar</button><button class="btn sec" type="button" id="pedido-no">Cancelar</button></div></div>
     <div class="chat-sug" id="chat-sug"></div>
     <form class="chat-form" id="chat-form" autocomplete="off">
       <textarea id="chat-in" rows="1" maxlength="500" placeholder="Ex.: gastei 30 no mercado" aria-label="Mensagem" enterkeyhint="send" autocapitalize="sentences"></textarea>
@@ -189,6 +190,7 @@
         <button type="button" data-ir="categorias"><b>Categorias</b><small>Veja os gastos agrupados por categoria</small></button>
         <button type="button" data-ir="dividas"><b>Dívidas</b><small>Cadastre e monte um plano para quitar</small></button>
         <button type="button" data-ir="desafios"><b>Desafios</b><small>Metas curtas com progresso automático</small></button>
+        <button type="button" data-ir="atalhos"><b>Atalhos e lembretes</b><small>Anotar sem abrir o app e receber avisos</small></button>
         <button type="button" data-ir="metas"><b>Metas e caixinhas</b><small>Reserva de emergência, viagem, objetivos</small></button>
         <button type="button" data-ir="importar"><b>Importar extrato</b><small>Traga lançamentos do seu banco (OFX ou CSV)</small></button>
         <button type="button" data-ir="familia"><b>Conta compartilhada</b><small>Casal ou família no mesmo controle</small></button>
@@ -302,6 +304,41 @@
     </div>
   </section>
 
+  <section class="tab" id="t-atalhos" hidden>
+    <div class="painel" id="push-painel">
+      <h2>Lembretes no celular</h2>
+      <div id="push-corpo"></div>
+    </div>
+    <div class="painel">
+      <h2>Anotar sem abrir o app</h2>
+      <p class="sub">Monte o seu atalho: escreva uma frase de exemplo e copie o link. Quando o link abre, o assessor mostra a frase e pergunta se pode lançar (só lança depois que você confirma).</p>
+      <label>Frase de exemplo<input id="at-frase" maxlength="200" placeholder="gastei 30 no mercado" autocomplete="off"></label>
+      <p class="leg" id="at-link" style="word-break:break-all"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="mini-b" type="button" id="at-copiar">Copiar link</button><button class="mini-b" type="button" id="at-base">Copiar link para ditar (sem frase)</button></div>
+      <p class="leg">Para ditar de qualquer lugar, use o link para ditar nos passos abaixo: ele abre o assessor pedindo a frase do seu atalho.</p>
+    </div>
+    <div class="painel">
+      <h2>iPhone: "Ei Siri, anotar no QUOX"</h2>
+      <ol class="passos">
+        <li>Instale o app: no Safari, toque em Compartilhar e em <strong>Adicionar à Tela de Início</strong>.</li>
+        <li>Abra o app <strong>Atalhos</strong> do iPhone e toque em <strong>+</strong>.</li>
+        <li>Adicione a ação <strong>Ditar texto</strong>.</li>
+        <li>Adicione a ação <strong>Codificar URL</strong> (procure por "URL") e escolha como entrada o <em>Texto ditado</em>.</li>
+        <li>Adicione a ação <strong>Texto</strong> e escreva o link: <code id="at-modelo"></code>, seguido do resultado de <em>Codificar URL</em> (toque no campo e escolha a variável).</li>
+        <li>Adicione <strong>Abrir URLs</strong> usando esse Texto.</li>
+        <li>Dê o nome <strong>Anotar no QUOX</strong>. Agora diga "Ei Siri, anotar no QUOX", fale "gastei 30 no mercado" e confirme no app.</li>
+      </ol>
+      <p class="leg">Os nomes das ações podem variar um pouco conforme a versão do iOS.</p>
+    </div>
+    <div class="painel">
+      <h2>Android</h2>
+      <ul class="passos">
+        <li><strong>Atalhos no ícone:</strong> instale o app (menu do Chrome → Instalar app). Segure o ícone do QUOX Assessor e escolha <strong>Anotar gasto</strong>, <strong>Ver resumo</strong> ou <strong>Extrato</strong>.</li>
+        <li><strong>Compartilhar para o QUOX:</strong> com o app instalado, toque em Compartilhar em uma mensagem ou notificação de banco e escolha <strong>QUOX Assessor</strong>. O texto chega no chat para você confirmar.</li>
+      </ul>
+    </div>
+  </section>
+
   <section class="tab" id="t-relatorio" hidden>
     <div class="painel" id="rel"></div>
     <div class="painel" id="ia-box" hidden>
@@ -339,6 +376,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="config.js"></script>
+<script src="push-config.js"></script>
 <script src="assessor-parser.js"></script>
 <script src="assessor-lib.js"></script>
 <script src="assessor-xlsx.js"></script>

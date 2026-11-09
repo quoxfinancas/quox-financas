@@ -7,8 +7,8 @@
   var sb = null, user = null, snap = { lanc: {}, div: {}, chat: "[]", extra: "" }, outbox = [], enviando = false, descartadas = 0, legadoDados = null;
   var PA = window.QuoxParser;
   var CATS_D = PA.CATS_D, CATS_R = PA.CATS_R, FORMAS = PA.FORMAS, BANCOS = PA.BANCOS;
-  var TABS = ["chat", "resumo", "categorias", "extrato", "planejar", "cartoes", "mais", "metas", "importar", "familia", "dividas", "desafios", "relatorio", "lancar"];
-  var MAIS = ["categorias", "dividas", "desafios", "metas", "importar", "familia"];
+  var TABS = ["chat", "resumo", "categorias", "extrato", "planejar", "cartoes", "mais", "metas", "importar", "familia", "dividas", "desafios", "atalhos", "relatorio", "lancar"];
+  var MAIS = ["categorias", "dividas", "desafios", "atalhos", "metas", "importar", "familia"];
   window.QuoxTabs = window.QuoxTabs || {};
   var MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
   var $ = function (id) { return document.getElementById(id); };
@@ -388,7 +388,9 @@
     ci.addEventListener("input", cresce);
     ci.addEventListener("focus", function () { setTimeout(function () { window.scrollTo(0, 0); ajustarChat(); rolarChat(); }, 300); });
     ci.addEventListener("blur", function () { setTimeout(ajustarChat, 100); });
-    $("chat-form").addEventListener("submit", function () { setTimeout(cresce, 0); });
+    $("pedido-ok").addEventListener("click", function () { var t = pedido.l; pedido.l = ""; $("pedido-bar").hidden = true; setTab("chat"); enviarChat(t); });
+  $("pedido-no").addEventListener("click", function () { pedido.l = ""; $("pedido-bar").hidden = true; });
+  $("chat-form").addEventListener("submit", function () { setTimeout(cresce, 0); });
   })();
   function desfazerChat(id) {
     var ip = window.QuoxLib.infoParcela(id);
@@ -788,10 +790,29 @@
       $("legado").hidden = false; legadoDados = l;
     } catch (x) {}
   }
+  /* Link de atalho: assessor.html?l=gastei 30 no mercado (ou ?aba=resumo). Lido uma vez e tirado do endereço; o lançamento só acontece depois que você confirma. */
+  var pedido = (function () {
+    var o = { l: "", aba: "", foco: false };
+    try {
+      var q = new URLSearchParams(location.search);
+      o.l = String(q.get("l") || q.get("t") || "").replace(/\s+/g, " ").trim().slice(0, 500);
+      o.aba = String(q.get("aba") || ""); o.foco = q.get("foco") === "1";
+      if (q.has("l") || q.has("t") || q.has("u") || q.has("aba") || q.has("foco")) history.replaceState(null, "", location.pathname + location.hash);
+    } catch (x) {}
+    return o;
+  })();
+  function mostrarPedido() {
+    var bar = $("pedido-bar"); if (!bar || !pedido.l) return;
+    $("pedido-txt").textContent = pedido.l; bar.hidden = false;
+  }
   function iniciarUI() {
     gerarRecorrentes();
-    var h0 = (location.hash || "").slice(1);
-    setTab(TABS.indexOf(h0) >= 0 ? h0 : "chat");
+    var h0 = (location.hash || "").slice(1), alvo = TABS.indexOf(pedido.aba) >= 0 ? pedido.aba : TABS.indexOf(h0) >= 0 ? h0 : "chat";
+    if (pedido.l) alvo = "chat";
+    setTab(alvo);
+    mostrarPedido();
+    if (pedido.foco && alvo === "chat" && $("chat-in")) setTimeout(function () { $("chat-in").focus(); }, 300);
+    pedido.aba = ""; pedido.foco = false;
   }
   function entrou(u) {
     if (user && user.id === u.id) return;

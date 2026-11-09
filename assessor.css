@@ -181,3 +181,6 @@ body.ap-chat{overflow:hidden;overscroll-behavior:none}
 .pagar-d input{flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .barra .fill.perdeu{background:var(--bad)}
 .opt-email{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.92rem;cursor:pointer}.opt-email input{margin-top:4px;width:20px;height:20px;flex:none}.opt-email small{color:var(--muted)}
+.pedido-bt{display:flex;gap:8px;margin-top:8px}.pedido-bt .btn{padding:8px 16px;min-height:40px}
+.passos{padding-left:1.2rem;margin:8px 0}.passos li{margin:6px 0}code{background:var(--soft);padding:1px 5px;border-radius:5px;word-break:break-all}
+.opt-email select{width:auto;display:inline-block;margin:0 4px;padding:4px 8px;font-size:16px}

@@ -118,6 +118,95 @@
   }
   window.QuoxTabs.semana = renderSemana;
 
+  /* ---------- atalhos: link para lançar sem abrir o app ---------- */
+  function baseLink() { return location.origin + location.pathname.replace(/[^\/]*$/, "") + "assessor.html?l="; }
+  function copiar(txt, ok) {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { A.toast(ok); }, function () { A.toast("Não consegui copiar. Selecione o texto e copie."); });
+    else A.toast("Seu navegador não permite copiar. Selecione o texto e copie.");
+  }
+  function linkFrase() { var f = $("at-frase").value.trim() || "gastei 30 no mercado"; return baseLink() + encodeURIComponent(f); }
+  function renderAtalhos() {
+    $("at-link").textContent = linkFrase(); $("at-modelo").textContent = baseLink();
+    if (window.QuoxTabs.push) window.QuoxTabs.push();
+  }
+  $("at-frase").addEventListener("input", function () { $("at-link").textContent = linkFrase(); });
+  $("at-copiar").addEventListener("click", function () { copiar(linkFrase(), "Link copiado."); });
+  $("at-base").addEventListener("click", function () { copiar(baseLink(), "Link copiado. Depois dele vai o texto ditado."); });
+  window.QuoxTabs.atalhos = renderAtalhos;
+
+  /* ---------- lembretes por notificação (push) ---------- */
+  var push = { carregado: false, sub: null, prefs: { contas: true, diario: false, hora: 20 }, msg: "", ocupado: false, perm: "" };
+  var CHAVE = function () { return String(window.QUOX_PUSH_KEY || "").trim(); };
+  function suportaPush() { return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
+  function ehIos() { var ua = navigator.userAgent || ""; return /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+  function b64ParaBytes(b64) { var p = "=".repeat((4 - b64.length % 4) % 4), r = atob((b64 + p).replace(/-/g, "+").replace(/_/g, "/")), o = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) o[i] = r.charCodeAt(i); return o; }
+  function bytesParaB64(buf) { var b = new Uint8Array(buf), s = ""; for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  function regPronto() { return navigator.serviceWorker.ready; }
+  function carregarPush() {
+    if (push.carregado || !suportaPush() || !CHAVE()) return;
+    push.carregado = true; push.perm = Notification.permission;
+    regPronto().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+      push.sub = sub;
+      if (!sub || !A.sb()) return;
+      return A.sb().from("push_subs").select("lembrete_contas,lembrete_diario,hora").eq("endpoint", sub.endpoint).maybeSingle().then(function (r) {
+        if (r && r.data) push.prefs = { contas: !!r.data.lembrete_contas, diario: !!r.data.lembrete_diario, hora: +r.data.hora || 20 };
+      });
+    }).then(renderPush, renderPush);
+  }
+  function gravarPush(sub) {
+    var j = sub.toJSON(), k = j.keys || {};
+    return A.sb().rpc("registrar_push", { p_endpoint: sub.endpoint, p_p256dh: k.p256dh, p_auth: k.auth, p_contas: push.prefs.contas, p_diario: push.prefs.diario, p_hora: push.prefs.hora, p_ua: (navigator.userAgent || "").slice(0, 200) });
+  }
+  function ativarPush() {
+    push.ocupado = true; push.msg = ""; renderPush();
+    Notification.requestPermission().then(function (p) {
+      push.perm = p;
+      if (p !== "granted") { push.msg = "A permissão foi negada. Para ligar depois, libere as notificações do QUOX nas configurações do navegador ou do celular."; throw new Error("negada"); }
+      return regPronto();
+    }).then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (s) { return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ParaBytes(CHAVE()) }); });
+    }).then(function (sub) { push.sub = sub; return gravarPush(sub); }).then(function (r) {
+      if (r && r.error) { push.msg = "Não foi possível ativar (" + (r.error.message || "erro") + "). Confira se rodou o arquivo schema-push.sql no Supabase."; push.sub = null; }
+      else push.msg = "Lembretes ativados neste aparelho.";
+      push.ocupado = false; renderPush();
+    }).catch(function (e) { push.ocupado = false; if (!push.msg) push.msg = "Não foi possível ativar os lembretes (" + ((e && e.message) || "erro") + ")."; renderPush(); });
+  }
+  function desativarPush() {
+    if (!push.sub) return; var sub = push.sub; push.ocupado = true; renderPush();
+    var ep = sub.endpoint;
+    Promise.resolve(A.sb().from("push_subs").delete().eq("endpoint", ep)).then(function () { return sub.unsubscribe(); }).then(function () { push.sub = null; push.msg = "Lembretes desativados neste aparelho."; push.ocupado = false; renderPush(); }, function () { push.ocupado = false; push.msg = "Não foi possível desativar agora. Tente de novo."; renderPush(); });
+  }
+  function salvarPrefs() {
+    if (!push.sub) return;
+    gravarPush(push.sub).then(function (r) { push.msg = r && r.error ? "Não foi possível salvar (" + (r.error.message || "erro") + ")." : "Preferências salvas."; renderPush(); });
+  }
+  function testarLocal() {
+    regPronto().then(function (reg) { return reg.showNotification("Teste do QUOX", { body: "Se você viu isto, o celular está liberando notificações para o app.", icon: "icon-192.png", tag: "teste-local" }); }).then(function () { push.msg = "Enviei uma notificação de teste para este aparelho."; renderPush(); }, function () { push.msg = "Não consegui mostrar a notificação. Verifique as permissões do celular."; renderPush(); });
+  }
+  function renderPush() {
+    var el = $("push-corpo"); if (!el) return;
+    var h = "";
+    if (!CHAVE()) h = '<p class="sub">Os lembretes ainda não foram configurados neste site.</p>';
+    else if (!suportaPush()) h = '<p class="sub">' + (ehIos() ? "No iPhone, os lembretes só funcionam com o app instalado na tela inicial (iOS 16.4 ou mais novo). Toque em Compartilhar, depois em <strong>Adicionar à Tela de Início</strong>, e abra o QUOX por esse ícone." : "Este navegador não oferece notificações. Tente o Chrome ou instale o app.") + "</p>";
+    else if (!A.user() || !A.sb()) h = '<p class="sub">Entre na sua conta para ativar os lembretes.</p>';
+    else if (!push.sub) {
+      h = '<p class="sub">Receba avisos de contas que vencem e um lembrete para anotar seus gastos. Os avisos mostram só o nome da conta, nunca valores.</p>' + (push.perm === "denied" ? '<p class="sub">As notificações estão bloqueadas para este site. Libere nas configurações do navegador ou do celular e volte aqui.</p>' : "") + '<button class="btn" type="button" id="push-ativar"' + (push.ocupado ? " disabled" : "") + ">Ativar lembretes neste aparelho</button>";
+    } else {
+      h = '<p class="sub" style="margin-top:0">Lembretes <strong>ativos</strong> neste aparelho ✓</p>' +
+        '<label class="opt-email"><input type="checkbox" id="push-contas"' + (push.prefs.contas ? " checked" : "") + '><span>Avisar contas que vencem hoje ou amanhã, e as atrasadas (às 9h)</span></label>' +
+        '<label class="opt-email"><input type="checkbox" id="push-diario"' + (push.prefs.diario ? " checked" : "") + '><span>Lembrar de anotar os gastos, se eu ainda não anotei no dia, às <select id="push-hora" aria-label="Horário do lembrete">' + [12, 18, 20, 21].map(function (x) { return '<option value="' + x + '"' + (push.prefs.hora === x ? " selected" : "") + ">" + x + "h</option>"; }).join("") + '</select></span></label>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="mini-b" type="button" id="push-teste">Testar neste aparelho</button><button class="mini-b perigo" type="button" id="push-desativar">Desativar neste aparelho</button></div>';
+    }
+    if (push.msg) h += '<p class="sub" id="push-msg" role="status" style="margin:8px 0 0">' + E(push.msg) + "</p>";
+    el.innerHTML = h;
+    var q = function (i, ev, fn) { var x = $(i); if (x) x.addEventListener(ev, fn); };
+    q("push-ativar", "click", ativarPush); q("push-desativar", "click", desativarPush); q("push-teste", "click", testarLocal);
+    q("push-contas", "change", function () { push.prefs.contas = $("push-contas").checked; salvarPrefs(); });
+    q("push-diario", "change", function () { push.prefs.diario = $("push-diario").checked; salvarPrefs(); });
+    q("push-hora", "change", function () { push.prefs.hora = +$("push-hora").value; salvarPrefs(); });
+  }
+  window.QuoxTabs.push = function () { renderPush(); carregarPush(); };
+
   /* ---------- chat ---------- */
   A.chat.push(function (texto, n, temNum) {
     if (temNum) return null;
