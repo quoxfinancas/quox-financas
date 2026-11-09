@@ -5,17 +5,17 @@
 .sx-logo img{width:40px;height:40px;border-radius:8px;display:block}
 .sx-logo span small{display:block;font-weight:500;font-size:.7rem;color:#52707b;letter-spacing:.04em}
 .sx-nav{margin-left:auto;display:flex;align-items:center;gap:4px}
-.sx-nav a,.sx-more>summary{color:#2b5566;text-decoration:none;padding:8px 12px;border-radius:8px;cursor:pointer;list-style:none;display:block}
+.sx-nav a,.sx-more>summary{white-space:nowrap;color:#2b5566;text-decoration:none;padding:8px 12px;border-radius:8px;cursor:pointer;list-style:none;display:block}
 .sx-more>summary::-webkit-details-marker{display:none}
 .sx-nav a:hover,.sx-more>summary:hover{background:#e6f4f9;color:#0b7a94}
 .sx-nav a[aria-current=page]{background:#dff1f8;color:#0b7a94;font-weight:600}
-.sx-more{position:relative}
+.sx-more{position:relative}.sx-drop a{white-space:nowrap}.sx-more:last-of-type .sx-drop{left:auto;right:0}.sx-more>summary.sx-ativo{background:#dff1f8;color:#0b7a94;font-weight:600}
 .sx-more[open]>summary{background:#e6f4f9;color:#0b7a94}
-.sx-drop{position:absolute;right:0;top:calc(100% + 4px);min-width:210px;background:#fff;border:1px solid #d6e8ef;border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(11,122,148,.18)}
+.sx-drop{position:absolute;left:0;top:calc(100% + 4px);min-width:210px;background:#fff;border:1px solid #d6e8ef;border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(11,122,148,.18)}
 .sx-burger{display:none;margin-left:auto;background:none;border:1px solid #bcd9e3;color:#12313c;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
 .sx-head a:focus-visible,.sx-head button:focus-visible,.sx-head summary:focus-visible{outline:2px solid #0b7a94;outline-offset:2px}
 .sx-sec{display:none}
-@media (max-width:760px){
+@media (max-width:900px){
   .sx-burger{display:block}
   .sx-nav{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;background:#fff;border-top:1px solid #d6e8ef;padding:8px 12px 14px;margin:0;gap:2px}
   .sx-nav.sx-open{display:flex}
@@ -23,7 +23,7 @@
   .sx-sec{display:block;margin:8px 0 2px;padding:8px 12px 0;border-top:1px solid #d6e8ef;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#52707b}
   .sx-extra{display:block}
 }
-@media (min-width:761px){.sx-extra{display:none}}
+@media (min-width:901px){.sx-extra{display:none}}
 .sx-foot{background:#e6f4f9;border-top:1px solid #d6e8ef;color:#3f6270;font:14px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;margin-top:40px;padding:28px 16px calc(28px + env(safe-area-inset-bottom,0px))}
 .sx-foot .in{max-width:1040px;margin:0 auto;display:grid;gap:18px}
 .sx-foot a{color:#0b7a94}

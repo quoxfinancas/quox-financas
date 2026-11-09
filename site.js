@@ -1,13 +1,13 @@
 /* Menu, rodapé e service worker do site QUOX - Finanças. Cada página só precisa de <body data-page="..."> e deste arquivo. */
 (function () {
   var pagina = document.body.getAttribute("data-page") || "";
-  var itens = [
-    ["home", "./", "Início"],
-    ["artigos", "artigos.html", "Artigos"],
+  var inicio = [["home", "./", "Início"], ["artigos", "artigos.html", "Artigos"]];
+  var apps = [
     ["simulador", "simulador.html", "Simulador de investimentos"],
-    ["assessor", "assessor.html", "Assessor financeiro"],
-    ["sites", "sites-para-empresas.html", "Sites para empresas"]
+    ["assessor", "assessor.html", "Assessor financeiro"]
   ];
+  var sites = [["sites", "sites-para-empresas.html", "Sites para empresas"]];
+  var itens = inicio.concat(apps, sites);
   var legais = [
     ["termos", "termos.html", "Termos de uso"],
     ["privacidade", "privacidade.html", "Política de privacidade"]
@@ -16,10 +16,13 @@
     var atual = x[0] === pagina || (x[0] === "artigos" && pagina === "artigo");
     return '<a href="' + x[1] + '"' + (atual ? ' aria-current="page"' : "") + ">" + x[2] + "</a>";
   }
-  var nav = itens.map(link).join("") +
-    '<a class="sx-conta" id="sx-conta" href="conta.html">Entrar / Criar conta</a>' +
-    '<details class="sx-more"><summary>Institucional ▾</summary><div class="sx-drop">' + legais.map(link).join("") + "</div></details>" +
-    '<div class="sx-sec sx-extra">Institucional</div><div class="sx-extra">' + legais.map(link).join("") + "</div>";
+  var emApp = apps.some(function (x) { return x[0] === pagina; });
+  function menu(titulo, lista, ativo) {
+    return '<details class="sx-more"><summary' + (ativo ? ' class="sx-ativo"' : "") + ">" + titulo + " ▾</summary><div class=\"sx-drop\">" + lista.map(link).join("") + "</div></details>" +
+      '<div class="sx-sec sx-extra">' + titulo + '</div><div class="sx-extra">' + lista.map(link).join("") + "</div>";
+  }
+  var nav = inicio.map(link).join("") + menu("Aplicativos", apps, emApp) + sites.map(link).join("") +
+    '<a class="sx-conta" id="sx-conta" href="conta.html">Entrar / Criar conta</a>' + menu("Institucional", legais, false);
   var head =
     '<header class="sx-head"><div class="sx-bar">' +
     '<a class="sx-logo" href="./"><img src="icon-192.png" alt="" width="40" height="40"><span>QUOX<small>FINANÇAS</small></span></a>' +
@@ -39,6 +42,9 @@
     var aberto = n.classList.toggle("sx-open");
     b.setAttribute("aria-expanded", aberto ? "true" : "false");
   });
+  var dets = document.querySelectorAll(".sx-more");
+  dets.forEach(function (d) { d.addEventListener("toggle", function () { if (d.open) dets.forEach(function (o) { if (o !== d) o.open = false; }); }); });
+  document.addEventListener("click", function (e) { dets.forEach(function (d) { if (!d.contains(e.target)) d.open = false; }); });
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { n.classList.remove("sx-open"); b.setAttribute("aria-expanded", "false"); }
   });
