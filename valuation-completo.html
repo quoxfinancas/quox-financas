@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Valuation completo da sua empresa - QUOX - Finanças</title>
+<meta name="description" content="Relatório completo e detalhado de valuation da sua empresa: fluxo de caixa descontado, múltiplos de mercado, patrimônio ajustado e análise de riscos. R$ 249,90.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="favicon-48.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="valuation.css">
+</head>
+<body data-page="valuation">
+<section class="hero"><div class="wrap">
+  <h1>Valuation completo da sua empresa</h1>
+  <p>Você informa os dados com o máximo de detalhe e recebe um relatório em PDF com o valor da empresa, a explicação de cada método e uma análise dos fatores que aumentam ou reduzem esse valor.</p>
+</div></section>
+<main class="wrap">
+  <div class="val-cta">
+    <div class="preco">R$ 249,90 <small style="font-size:.9rem;font-weight:500;color:var(--muted)">pagamento único</small></div>
+    <ul class="ok" style="list-style:none;padding:0;margin:8px 0 0;display:grid;gap:6px">
+      <li>✓ Valor por fluxo de caixa descontado, com 5 anos de projeção</li>
+      <li>✓ Comparação com múltiplos de mercado do seu setor</li>
+      <li>✓ Patrimônio ajustado como valor de referência</li>
+      <li>✓ Análise de sensibilidade (e se a taxa ou o crescimento mudarem)</li>
+      <li>✓ Fatores de risco e de valorização da sua empresa</li>
+      <li>✓ Relatório detalhado em PDF enviado por e-mail</li>
+    </ul>
+  </div>
+  <p>Quer só uma ideia rápida? Use a <a href="valuation.html">estimativa gratuita</a>.</p>
+
+  <form id="c-form" novalidate>
+    <div class="val-box"><h2>1. Você e a empresa</h2><div class="val-grid">
+      <label>Seu nome<input data-k="nome" maxlength="100" autocomplete="name"></label>
+      <label>Nome da empresa<input data-k="empresa" maxlength="150" autocomplete="organization"></label>
+      <label>CNPJ (opcional)<input data-k="cnpj" maxlength="20" inputmode="numeric"></label>
+      <label>E-mail para receber o relatório<input data-k="email" type="email" maxlength="150" autocomplete="email" inputmode="email"></label>
+      <label>WhatsApp ou telefone (opcional)<input data-k="telefone" type="tel" maxlength="30" autocomplete="tel"></label>
+      <label>Para que você quer o valuation?<select data-k="objetivo"><option value="conhecer">Conhecer o valor</option><option value="vender">Vender a empresa</option><option value="socio">Entrada ou saída de sócio</option><option value="investidor">Captar investimento</option><option value="sucessao">Sucessão ou herança</option><option value="credito">Crédito</option></select></label>
+      <label>Setor<select data-k="setor" id="c-setor"></select></label>
+      <label>Anos de operação<input data-k="anos" data-num inputmode="numeric"></label>
+      <label>Número de funcionários<input data-k="funcionarios" data-num inputmode="numeric"></label>
+    </div>
+    <label style="margin-top:12px">O que a empresa faz? (um parágrafo)<textarea data-k="descricao" rows="3" maxlength="1500"></textarea></label></div>
+
+    <div class="val-box"><h2>2. Resultados dos últimos 3 anos (R$)</h2>
+      <p class="sub" style="color:var(--muted);margin-top:0">Use o ano mais recente na coluna "Último ano" (pode ser os últimos 12 meses). EBITDA é o lucro da operação antes de juros, impostos sobre o lucro, depreciação e amortização.</p>
+      <div class="val-grid">
+        <label>Faturamento, 2 anos atrás<input data-k="hist.receita.0" data-num inputmode="decimal"></label>
+        <label>Faturamento, ano passado<input data-k="hist.receita.1" data-num inputmode="decimal"></label>
+        <label>Faturamento, último ano<input data-k="hist.receita.2" data-num inputmode="decimal" id="c-rec"></label>
+        <label>EBITDA, 2 anos atrás<input data-k="hist.ebitda.0" data-num inputmode="decimal"></label>
+        <label>EBITDA, ano passado<input data-k="hist.ebitda.1" data-num inputmode="decimal"></label>
+        <label>EBITDA, último ano<input data-k="hist.ebitda.2" data-num inputmode="decimal" id="c-ebitda"></label>
+        <label>Lucro líquido, 2 anos atrás<input data-k="hist.lucro.0" data-num inputmode="decimal"></label>
+        <label>Lucro líquido, ano passado<input data-k="hist.lucro.1" data-num inputmode="decimal"></label>
+        <label>Lucro líquido, último ano<input data-k="hist.lucro.2" data-num inputmode="decimal"></label>
+      </div></div>
+
+    <div class="val-box"><h2>3. Balanço atual (R$)</h2><div class="val-grid">
+      <label>Dinheiro em caixa e bancos<input data-k="balanco.caixa" data-num inputmode="decimal"></label>
+      <label>Contas a receber<input data-k="balanco.contasReceber" data-num inputmode="decimal"></label>
+      <label>Estoques<input data-k="balanco.estoques" data-num inputmode="decimal"></label>
+      <label>Imobilizado (imóveis, máquinas, veículos)<small>Pelo valor de mercado, se souber</small><input data-k="balanco.imobilizado" data-num inputmode="decimal"></label>
+      <label>Outros ativos<input data-k="balanco.outrosAtivos" data-num inputmode="decimal"></label>
+      <label>Fornecedores a pagar<input data-k="balanco.fornecedores" data-num inputmode="decimal"></label>
+      <label>Empréstimos e financiamentos<input data-k="balanco.dividasFinanceiras" data-num inputmode="decimal"></label>
+      <label>Impostos e encargos a pagar<input data-k="balanco.impostosPagar" data-num inputmode="decimal"></label>
+      <label>Outras dívidas<input data-k="balanco.outrosPassivos" data-num inputmode="decimal"></label>
+    </div></div>
+
+    <div class="val-box"><h2>4. Expectativas para os próximos 5 anos</h2>
+      <p style="color:var(--muted);margin-top:0">Se não souber algum item, deixe o valor sugerido. Revisamos as premissas na análise.</p>
+      <div class="val-grid">
+        <label>Crescimento do faturamento, ano 1 (%)<input data-k="crescimentos.0" data-num inputmode="decimal" value="10"></label>
+        <label>Ano 2 (%)<input data-k="crescimentos.1" data-num inputmode="decimal" value="10"></label>
+        <label>Ano 3 (%)<input data-k="crescimentos.2" data-num inputmode="decimal" value="8"></label>
+        <label>Ano 4 (%)<input data-k="crescimentos.3" data-num inputmode="decimal" value="6"></label>
+        <label>Ano 5 (%)<input data-k="crescimentos.4" data-num inputmode="decimal" value="5"></label>
+        <label>Margem EBITDA esperada (%)<small>Deixe vazio para usar a margem atual</small><input data-k="margemEbitda" data-num inputmode="decimal"></label>
+        <label>Depreciação (% do faturamento)<input data-k="depreciacao" data-num inputmode="decimal" value="3"></label>
+        <label>Investimentos em equipamentos (% do faturamento)<input data-k="capex" data-num inputmode="decimal" value="4"></label>
+        <label>Capital de giro (% do aumento do faturamento)<input data-k="capitalGiro" data-num inputmode="decimal" value="15"></label>
+        <label>Imposto sobre o lucro (%)<small>Alíquota efetiva aproximada</small><input data-k="aliquota" data-num inputmode="decimal" value="15"></label>
+        <label>Taxa de retorno exigida (% ao ano)<small>Pequenas empresas costumam usar entre 18% e 25%</small><input data-k="taxaDesconto" data-num inputmode="decimal" value="20"></label>
+        <label>Crescimento no longo prazo (% ao ano)<small>Normalmente próximo da inflação</small><input data-k="crescPerpetuo" data-num inputmode="decimal" value="4"></label>
+      </div></div>
+
+    <div class="val-box"><h2>5. Sobre o negócio</h2><div class="val-grid">
+      <label>Receita recorrente (%)<small>Parte do faturamento que se repete todo mês</small><input data-k="recorrente" data-num inputmode="decimal"></label>
+      <label>Quanto o maior cliente representa do faturamento (%)<input data-k="concentracaoClientes" data-num inputmode="decimal"></label>
+      <label>A empresa depende do dono?<select data-k="dependenciaDono" data-num id="c-dono"><option value="0">Não</option><option value="1">Em parte</option><option value="2">Sim, muito</option></select></label>
+      <label>Há operações sem registro formal?<select data-k="informalidade"><option value="nao">Não</option><option value="sim">Sim</option></select></label>
+      <label>Contabilidade e controles organizados?<select data-k="contabilidadeOrganizada"><option value="sim">Sim</option><option value="nao">Não</option></select></label>
+      <label>Tem contratos de longo prazo?<select data-k="contratosLongos"><option value="nao">Não</option><option value="sim">Sim</option></select></label>
+      <label>Marca ou carteira de clientes consolidada?<select data-k="marcaForte"><option value="nao">Não</option><option value="sim">Sim</option></select></label>
+      <label>Há processos judiciais relevantes?<select data-k="processosJudiciais"><option value="nao">Não</option><option value="sim">Sim</option></select></label>
+    </div>
+    <label style="margin-top:12px">Principais riscos, oportunidades e outras informações<textarea data-k="observacoes" rows="4" maxlength="3000"></textarea></label></div>
+
+    <div class="val-box">
+      <label class="opt"><input type="checkbox" id="c-lgpd"><span>Concordo que o QUOX use estes dados para elaborar o meu relatório e entrar em contato, conforme a <a href="privacidade.html">Política de Privacidade</a>. Entendo que o relatório é uma estimativa e não um laudo oficial.</span></label>
+      <p class="erro-t" id="c-erro" role="alert"></p>
+      <button class="btn" type="submit" id="c-enviar">Enviar dados e ir para o pagamento</button>
+    </div>
+  </form>
+
+  <div class="val-box" id="c-ok" hidden>
+    <h2>Dados recebidos!</h2>
+    <p>Código do seu pedido: <strong id="c-cod" style="font-size:1.3rem"></strong></p>
+    <p id="c-pg-txt"></p>
+    <div><a class="btn" id="c-pg" href="#" target="_blank" rel="noopener" hidden>Pagar R$ 249,90</a> <a class="btn sec" id="c-zap" href="#" target="_blank" rel="noopener" hidden>Falar no WhatsApp</a></div>
+    <p style="color:var(--muted);font-size:.9rem">Depois da confirmação do pagamento, o relatório é enviado para o seu e-mail em até 3 dias úteis.</p>
+  </div>
+  <div class="val-av"><strong>Importante:</strong> o relatório é uma estimativa de valor feita com base nas informações que você fornece e em referências de mercado. Não é laudo de avaliação, perícia nem recomendação de compra, venda ou investimento. Quanto mais precisas as informações, mais confiável o resultado.</div>
+</main>
+<script src="config.js"></script>
+<script src="sites-config.js"></script>
+<script src="valuation-config.js"></script>
+<script src="valuation-lib.js"></script>
+<script>
+(function () {
+  var V = window.QuoxVal, CFG = window.QUOX_CFG || {}, VC = window.QUOX_VAL || {}, $ = function (i) { return document.getElementById(i); };
+  Object.keys(V.SETORES).forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = V.SETORES[k].nome; $("c-setor").appendChild(o); });
+  function el(k) { return document.querySelector('[data-k="' + k + '"]'); }
+  try {
+    var p = JSON.parse(sessionStorage.getItem("quox_val_pre") || "null");
+    if (p) { el("setor").value = p.setor; if (p.anos) el("anos").value = p.anos; $("c-dono").value = String(p.dependenciaDono); if (p.recorrente) el("recorrente").value = p.recorrente;
+      $("c-rec").value = Math.round(p.receita).toLocaleString("pt-BR"); $("c-ebitda").value = Math.round(p.ebitda).toLocaleString("pt-BR"); }
+  } catch (x) {}
+  function set(o, path, v) { var a = path.split("."), i; for (i = 0; i < a.length - 1; i++) { var k = /^\d+$/.test(a[i + 1]) ? [] : {}; if (o[a[i]] == null) o[a[i]] = k; o = o[a[i]]; } o[a[a.length - 1]] = v; }
+  $("c-form").addEventListener("submit", function (ev) {
+    ev.preventDefault(); var er = $("c-erro"); er.textContent = "";
+    var d = {}; document.querySelectorAll("[data-k]").forEach(function (f) { set(d, f.getAttribute("data-k"), f.hasAttribute("data-num") ? V.parseBR(f.value) : f.value.trim()); });
+    var nome = d.nome, empresa = d.empresa, email = d.email, h = d.hist || {};
+    if (!nome || nome.length < 2) { er.textContent = "Informe o seu nome."; return; }
+    if (!empresa || empresa.length < 2) { er.textContent = "Informe o nome da empresa."; return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email || "")) { er.textContent = "Informe um e-mail válido."; return; }
+    if (!(h.receita && h.receita[2] > 0)) { er.textContent = "Informe o faturamento do último ano."; $("c-rec").focus(); return; }
+    if (!$("c-lgpd").checked) { er.textContent = "Para enviar, marque a concordância com o uso dos dados."; return; }
+    if (!CFG.supabaseUrl || !CFG.supabaseKey) { er.textContent = "O envio não está disponível agora. Tente mais tarde ou use o WhatsApp."; return; }
+    // campos que o motor de cálculo usa
+    d.receita = h.receita[2]; d.ebitda = (h.ebitda && h.ebitda[2]) || 0;
+    d.caixa = (d.balanco && d.balanco.caixa) || 0; d.dividaFinanceira = (d.balanco && d.balanco.dividasFinanceiras) || 0;
+    d.crescimento = d.crescimentos.reduce(function (s, x) { return s + x; }, 0) / 5;
+    if (!d.margemEbitda) d.margemEbitda = Math.round(d.ebitda / d.receita * 1000) / 10;
+    var dados = JSON.parse(JSON.stringify(d)); ["nome", "empresa", "email", "telefone", "objetivo"].forEach(function (k) { delete dados[k]; });
+    $("c-enviar").disabled = true;
+    fetch(CFG.supabaseUrl + "/rest/v1/rpc/pedir_valuation", { method: "POST", headers: { apikey: CFG.supabaseKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_nome: nome, p_empresa: empresa, p_email: email, p_telefone: d.telefone || "", p_objetivo: d.objetivo, p_dados: dados, p_consentimento: true }) })
+      .then(function (r) { return r.ok ? r.json() : r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.message || "erro"); }); })
+      .then(function (cod) {
+        $("c-form").hidden = true; $("c-ok").hidden = false; $("c-cod").textContent = cod;
+        var zap = String(VC.whatsapp || (window.QUOX_SITES || {}).whatsapp || "").replace(/\D/g, "");
+        if (VC.pagamentoUrl) { $("c-pg").href = VC.pagamentoUrl; $("c-pg").hidden = false; $("c-pg-txt").textContent = "Faça o pagamento pelo botão abaixo e, se o sistema pedir uma descrição, informe o código do pedido."; }
+        else $("c-pg-txt").textContent = "Para receber a forma de pagamento, fale com a gente informando o código do pedido.";
+        if (zap) { $("c-zap").href = "https://wa.me/" + zap + "?text=" + encodeURIComponent("Olá! Fiz o pedido de valuation completo, código " + cod + "."); $("c-zap").hidden = false; }
+        $("c-ok").scrollIntoView({ block: "center" });
+        try { sessionStorage.removeItem("quox_val_pre"); } catch (x) {}
+      })
+      .catch(function (e) { $("c-enviar").disabled = false; er.textContent = /repetido/.test(e.message) ? "Já recebemos um pedido seu há pouco." : "Não foi possível enviar agora. Tente novamente em instantes."; });
+  });
+})();
+</script>
+<script src="site.js"></script>
+</body>
+</html>

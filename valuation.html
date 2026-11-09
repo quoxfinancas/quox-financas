@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quanto vale a minha empresa? Valuation grátis - QUOX - Finanças</title>
+<meta name="description" content="Estimativa gratuita do valor da sua empresa em poucos minutos. Para uma análise completa e detalhada, peça o relatório de valuation.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="favicon-48.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="valuation.css">
+</head>
+<body data-page="valuation">
+<section class="hero"><div class="wrap">
+  <h1>Quanto vale a sua empresa?</h1>
+  <p>Informe alguns dados básicos e veja uma estimativa de valor, de graça e sem cadastro. Para uma análise completa, com relatório detalhado, escolha o valuation completo.</p>
+</div></section>
+<main class="wrap">
+  <form id="v-form" class="val-box" novalidate>
+    <h2>Dados da empresa</h2>
+    <div class="val-grid">
+      <label>Setor<select id="v-setor"></select></label>
+      <label>Faturamento anual (R$)<small>Soma dos últimos 12 meses</small><input id="v-rec" inputmode="decimal" placeholder="Ex.: 1.200.000"></label>
+      <label>Lucro operacional anual (R$)<small>O que sobra da operação antes de juros e impostos (EBITDA). Se não souber, estime pela margem.</small><input id="v-ebitda" inputmode="decimal" placeholder="Ex.: 240.000"></label>
+      <label>Dívidas menos caixa (R$)<small>Empréstimos e financiamentos menos o dinheiro em caixa. Se tiver mais caixa que dívida, use valor negativo.</small><input id="v-dl" inputmode="decimal" placeholder="0"></label>
+      <label>Crescimento do faturamento (% ao ano)<input id="v-cres" inputmode="decimal" placeholder="Ex.: 10"></label>
+      <label>Receita recorrente (%)<small>Parte do faturamento que se repete todo mês (assinaturas, contratos)</small><input id="v-rec2" inputmode="decimal" placeholder="Ex.: 30"></label>
+      <label>A empresa depende do dono?<select id="v-dono"><option value="0">Não, funciona sem mim</option><option value="1" selected>Em parte</option><option value="2">Sim, muito</option></select></label>
+      <label>Anos de operação<input id="v-anos" inputmode="numeric" placeholder="Ex.: 5"></label>
+    </div>
+    <p class="erro-t" id="v-erro" role="alert"></p>
+    <button class="btn" type="submit">Calcular estimativa</button>
+  </form>
+
+  <div id="v-res" hidden>
+    <div class="val-res">
+      <p style="margin:0">Valor estimado do capital da empresa (já descontadas as dívidas)</p>
+      <div class="val-big" id="r-mid"></div>
+      <div class="val-faixa" id="r-faixa"><i id="r-i"></i><b id="r-b"></b></div>
+      <div class="val-leg"><span id="r-min"></span><span id="r-max"></span></div>
+      <p id="r-ev" style="margin:12px 0 0;color:var(--muted);font-size:.9rem"></p>
+      <ul class="val-fat" id="r-fat"></ul>
+    </div>
+    <div class="val-cta">
+      <h3 style="margin:0">Quer saber o valor com mais precisão?</h3>
+      <p>No valuation completo analisamos o fluxo de caixa projetado, comparamos com o mercado, avaliamos riscos e entregamos um relatório detalhado em PDF.</p>
+      <div class="preco">R$ 249,90</div>
+      <a class="btn" id="v-cta" href="valuation-completo.html">Pedir valuation completo</a>
+    </div>
+  </div>
+  <div class="val-av"><strong>Importante:</strong> esta é uma estimativa educativa, feita com faixas de referência para pequenas e médias empresas. Não é laudo, avaliação oficial, perícia nem recomendação de compra ou venda. O valor real depende de negociação, momento de mercado e informações que esta estimativa não considera.</div>
+  <h2>Como a estimativa é feita</h2>
+  <p>Usamos dois métodos comuns de mercado: o múltiplo do lucro operacional (EBITDA) e o múltiplo do faturamento, com faixas próprias para cada setor. Depois ajustamos a posição dentro da faixa de acordo com crescimento, margem, receita recorrente, dependência do dono e tempo de empresa, e descontamos as dívidas líquidas.</p>
+</main>
+<script src="valuation-lib.js"></script>
+<script>
+(function () {
+  var V = window.QuoxVal, $ = function (i) { return document.getElementById(i); };
+  var R = function (x) { return "R$ " + Math.round(x).toLocaleString("pt-BR"); };
+  Object.keys(V.SETORES).forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = V.SETORES[k].nome; $("v-setor").appendChild(o); });
+  $("v-form").addEventListener("submit", function (ev) {
+    ev.preventDefault(); $("v-erro").textContent = "";
+    var d = { setor: $("v-setor").value, receita: V.parseBR($("v-rec").value), ebitda: V.parseBR($("v-ebitda").value), dividaLiquida: V.parseBR($("v-dl").value),
+      crescimento: V.parseBR($("v-cres").value), recorrente: V.parseBR($("v-rec2").value), dependenciaDono: Number($("v-dono").value), anos: V.parseBR($("v-anos").value) };
+    if (!(d.receita > 0)) { $("v-erro").textContent = "Informe o faturamento anual."; $("v-rec").focus(); return; }
+    if (d.ebitda > d.receita) { $("v-erro").textContent = "O lucro operacional não pode ser maior que o faturamento."; return; }
+    var e = V.estimativa(d);
+    $("r-mid").textContent = R(e.equity.mid);
+    $("r-min").textContent = "de " + R(e.equity.min); $("r-max").textContent = "até " + R(e.equity.max);
+    var top = Math.max(e.equity.max, 1), l = e.equity.min / top * 100, w = (e.equity.max - e.equity.min) / top * 100;
+    $("r-i").style.left = l + "%"; $("r-i").style.width = Math.max(w, 2) + "%"; $("r-b").style.left = "calc(" + (e.equity.mid / top * 100) + "% - 2px)";
+    $("r-ev").textContent = "Valor da operação (antes de descontar dívidas): cerca de " + R(e.ev.mid) + "." + (e.semLucro ? " Como a empresa não tem lucro operacional, usamos só o faturamento e o valor é mais incerto." : "");
+    $("r-fat").innerHTML = e.fatores.length ? e.fatores.map(function (f) { return '<li class="' + (f.v < 0 ? "neg" : "") + '"></li>'; }).join("") : "";
+    Array.prototype.forEach.call($("r-fat").children, function (li, i) { li.textContent = e.fatores[i].txt; });
+    $("v-res").hidden = false; $("v-res").scrollIntoView({ behavior: "smooth", block: "start" });
+    try { sessionStorage.setItem("quox_val_pre", JSON.stringify(d)); } catch (x) {}
+  });
+})();
+</script>
+<script src="site.js"></script>
+</body>
+</html>

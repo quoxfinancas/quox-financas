@@ -1,0 +1,20 @@
+/* QUOX - Valuation (páginas valuation.html e valuation-completo.html) */
+.val-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 16px}
+.val-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+.val-box h2,.val-box h3{margin:0 0 10px}
+.val-box label{display:block;font-size:.9rem;font-weight:600}
+.val-box label small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.val-box input:not([type=checkbox]),.val-box select,.val-box textarea{display:block;width:100%;margin-top:4px;padding:10px 12px;font:inherit;font-size:16px;border:1px solid #bcd9e3;border-radius:8px;background:#fff;color:var(--ink);box-sizing:border-box}
+.val-res{background:linear-gradient(135deg,#e6f6fb,#f4fafd);border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}
+.val-big{font-size:clamp(1.7rem,6vw,2.4rem);font-weight:800;color:var(--accent);line-height:1.1}
+.val-faixa{position:relative;height:12px;border-radius:99px;background:#d6e8ef;margin:16px 0 6px}
+.val-faixa i{position:absolute;top:0;bottom:0;border-radius:99px;background:var(--accent)}
+.val-faixa b{position:absolute;top:-4px;width:4px;height:20px;border-radius:2px;background:var(--ink)}
+.val-leg{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
+.val-fat{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px;font-size:.92rem}
+.val-fat li::before{content:"▲ ";color:var(--ok)}.val-fat li.neg::before{content:"▼ ";color:var(--bad)}
+.val-cta{background:var(--soft);border:2px solid var(--accent);border-radius:14px;padding:18px 20px;margin:18px 0}
+.val-cta .preco{font-size:1.8rem;font-weight:800;color:var(--accent);margin:4px 0}
+.val-av{background:#fff8e6;border:1px solid #f0d58a;border-radius:10px;padding:10px 14px;font-size:.88rem;margin:12px 0}
+.val-sec{margin:22px 0 4px;font-size:1.05rem;color:var(--accent)}
+.val-box label.opt{display:flex;gap:10px;align-items:flex-start;font-weight:400}.val-box label.opt input{width:20px;height:20px;margin-top:3px;flex:none}
