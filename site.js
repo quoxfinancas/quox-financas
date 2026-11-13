@@ -8,7 +8,8 @@
     ["valuation", "valuation.html", "Valuation de empresas"]
   ];
   var sites = [["sites", "sites-para-empresas.html", "Sites para empresas"]];
-  var itens = inicio.concat(apps, sites);
+  var cursos = [["cursos", "cursos.html", "Cursos"]];
+  var itens = inicio.concat(apps, sites, cursos);
   var legais = [
     ["termos", "termos.html", "Termos de uso"],
     ["privacidade", "privacidade.html", "Política de privacidade"]
@@ -22,7 +23,7 @@
     return '<details class="sx-more"><summary' + (ativo ? ' class="sx-ativo"' : "") + ">" + titulo + " ▾</summary><div class=\"sx-drop\">" + lista.map(link).join("") + "</div></details>" +
       '<div class="sx-sec sx-extra">' + titulo + '</div><div class="sx-extra">' + lista.map(link).join("") + "</div>";
   }
-  var nav = inicio.map(link).join("") + menu("Aplicativos", apps, emApp) + sites.map(link).join("") +
+  var nav = inicio.map(link).join("") + menu("Aplicativos", apps, emApp) + sites.map(link).join("") + cursos.map(link).join("") +
     '<a class="sx-conta" id="sx-conta" href="conta.html">Entrar / Criar conta</a>' + menu("Institucional", legais, false);
   var head =
     '<header class="sx-head"><div class="sx-bar">' +
